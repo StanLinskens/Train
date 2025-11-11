@@ -1,12 +1,93 @@
 <!doctype html>
-<html>
+<html lang="en">
+
 <head>
   <meta charset="utf-8">
-  <title>Train-test</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Train</title>
+  <!-- preload font to reduce FOUC when online -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="inc/css/style.css">
 </head>
+
 <body>
-  <h1>Train-test</h1>
-  <script src="inc/"></script>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <!-- Header -->
+  <header>
+    <nav>
+      <div class="logo">Train</div>
+      <button class="nav-toggle" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="hamburger" aria-hidden="true"></span>
+      </button>
+      <ul id="primary-nav" class="nav-links">
+        <li><a href="#hero">Home</a></li>
+        <li><a href="#about">About Project</a></li>
+        <li><a href="#team">Team</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- Hero Section -->
+    <section id="hero" class="hero reveal">
+      <div class="hero-content">
+        <h1>Welcome to Train Project</h1>
+        <p>Innovating the future of railway technology and travel.</p>
+        <a href="#about" class="btn">Learn More</a>
+      </div>
+    </section>
+
+    <!-- About Project -->
+    <section id="about" class="about reveal">
+      <h2>About the Project</h2>
+      <p>
+        The Train Project is a modern initiative focused on creating an efficient, sustainable,
+        and smart railway experience. Our mission is to enhance connectivity, reduce carbon footprint,
+        and bring innovation to transportation systems worldwide.
+      </p>
+    </section>
+
+    <!-- Team Section -->
+    <section id="team" class="team reveal">
+      <h2>Meet Our Team</h2>
+      <div class="team-container">
+        <div class="team-carousel">
+          <div class="team-member">
+            <img src="assets/image/member1.jpg" alt="Team Member 1">
+            <h3>Stan Linskens</h3>
+            <p>Project Lead - Software Developer</p>
+          </div>
+          <div class="team-member">
+            <img src="assets/image/member2.jpg" alt="Team Member 2">
+            <h3>Wout Vereijken</h3>
+            <p>Software Developer</p>
+          </div>
+          <div class="team-member">
+            <img src="assets/image/member3.jpg" alt="Team Member 3">
+            <h3>Lucas Knol</h3>
+            <p>Software Developer</p>
+          </div>
+          <div class="team-member">
+            <img src="assets/image/member4.jpg" alt="Team Member 4">
+            <h3>Kacper Rebelski</h3>
+            <p>Production Lead</p>
+          </div>
+          <div class="team-member">
+            <img src="assets/image/member5.jpg" alt="Team Member 5">
+            <h3>Akoc Wol</h3>
+            <p>Software developer</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>@footer</p>
+  </footer>
+
+  <script src="inc/js/main.js"></script>
 </body>
+
 </html>

@@ -1,3 +1,394 @@
-/* Basic styles for Train-test */
-body { font-family: Arial, sans-serif; margin: 16px; padding: 0; color: #222; }
-header { margin-bottom: 16px; }
+@import url(theme.css);
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --container-padding: 1rem 2rem;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.45;
+    min-height: 100vh;
+}
+
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.skip-link:focus {
+    left: 1rem;
+    top: 1rem;
+    width: auto;
+    height: auto;
+    background: #fff;
+    color: var(--primary-color);
+    padding: 0.5rem 1rem;
+    z-index: 9999;
+}
+
+/* Header */
+header {
+    background: var(--primary-color);
+    color: #fff;
+    padding: 1rem 0.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.logo {
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.nav-links a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.25s ease, transform 0.2s ease;
+}
+
+.nav-links a:hover {
+    color: var(--accent-color);
+    transform: translateY(-2px);
+}
+
+.nav-toggle {
+    display: none;
+    background: transparent;
+    border: 0;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-toggle .hamburger {
+    width: 22px;
+    height: 2px;
+    background: #fff;
+    position: relative;
+}
+
+.nav-toggle .hamburger::before,
+.nav-toggle .hamburger::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 22px;
+    height: 2px;
+    background: #fff;
+}
+
+.nav-toggle .hamburger::before {
+    top: -7px;
+}
+
+.nav-toggle .hamburger::after {
+    top: 7px;
+}
+
+/* Hero Section */
+.hero {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: #fff;
+    text-align: center;
+    padding: 9rem 2rem;
+    overflow: hidden;
+    /* Make hero full viewport height while keeping content centered */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-content {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.hero h1 {
+    font-size: 2.25rem;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+}
+
+.hero p {
+    font-size: 1.05rem;
+    margin-bottom: 1.25rem;
+}
+
+.btn {
+    background: linear-gradient(90deg, #fff, #ffecec);
+    color: var(--primary-color);
+    padding: 0.65rem 1.25rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    box-shadow: 0 6px 18px rgba(211, 47, 47, 0.12);
+}
+
+.btn:hover {
+    transform: translateY(-4px);
+}
+
+/* Animations */
+@keyframes revealUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.reveal {
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+.reveal.show {
+    animation: revealUp 600ms cubic-bezier(.2, .9, .2, 1) both;
+}
+
+.hero .btn {
+    animation: pulse 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .reveal.show,
+    .hero .btn {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* About Section */
+.about {
+    padding: 4rem 1.5rem;
+    text-align: center;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+\n.about {
+    display: flex;
+    align-items: center;
+}
+
+.about h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Team Section */
+.team {
+    padding: 3rem 2rem;
+    background: #fff0f0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+\n.team {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.team h2 {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.team-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    overflow: hidden;
+    width: 100%;
+}
+
+.team-carousel {
+    display: flex;
+    gap: 1rem;
+    padding: 2rem 0;
+    align-items: center;
+    will-change: transform;
+}
+
+.team-member {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    min-width: 200px;
+    max-width: 300px;
+    flex: 0 0 auto;
+    padding: 1rem;
+    transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+
+.team-member img {
+    /* width: 100%; */
+    height: 300px;
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.team-member:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08);
+}
+
+/* desktop: keep CSS fallback animation, but JS will handle a better loop */
+@keyframes scrollTeam {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+@media (min-width: 900px) {
+    .team-carousel.js-loop-fallback {
+        animation: scrollTeam 20s linear infinite;
+    }
+}
+
+/* Responsive: mobile layout */
+@media (max-width: 899px) {
+    .nav-links {
+        display: none;
+        position: absolute;
+        right: 1rem;
+        top: 60px;
+        background: rgba(255, 255, 255, 0.98);
+        color: var(--text-color);
+        flex-direction: column;
+        gap: 0;
+        padding: 0.5rem;
+        border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .nav-links.open {
+        display: flex;
+    }
+
+    .nav-links a {
+        color: var(--text-color);
+        padding: 0.5rem 1rem;
+        display: block;
+    }
+
+    .nav-toggle {
+        display: inline-flex;
+    }
+
+    .hero {
+        padding: 3.5rem 1rem;
+    }
+
+    .hero h1 {
+        font-size: 1.6rem;
+    }
+
+    .hero p {
+        font-size: 0.98rem;
+    }
+
+    /* Team becomes a horizontal scroll on mobile (no auto animation) */
+    .team-container {
+        overflow-x: auto;
+        padding-bottom: 1rem;
+    }
+
+    .team-carousel {
+        animation: none !important;
+        display: flex;
+    }
+
+    .team-member {
+        min-width: 80%;
+        max-width: 80%;
+    }
+}
+
+/* Larger screens spacing */
+@media (min-width: 900px) {
+    .hero h1 {
+        font-size: 2.75rem;
+    }
+
+    .hero p {
+        font-size: 1.15rem;
+    }
+
+    .nav-links {
+        display: flex;
+    }
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 1rem;
+    background: var(--primary-color);
+    color: #fff;
+}
