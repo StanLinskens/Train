@@ -77,10 +77,41 @@ void checkMessages() {
         line.trim();
         if (line.length() > 0) {
           Serial.println("CMD: " + line);
-          // Here you would parse and execute commands to move train, switch tracks, etc.
-          // For now we simulate execution and send a confirmation back.
-          String resp = String("Executed: ") + line;
-          postResponse(resp);
+          // parse order messages: format ORDER|k=v;k2=v2
+          if (line.startsWith("ORDER|")) {
+            String body = line.substring(6);
+            // split by ';'
+            int idx = 0;
+            // simple container for parsed pairs
+            String ack = "ACK_ORDER|";
+            while (idx < body.length()) {
+              int sc = body.indexOf(';', idx);
+              String pair;
+              if (sc == -1) {
+                pair = body.substring(idx);
+                idx = body.length();
+              } else {
+                pair = body.substring(idx, sc);
+                idx = sc + 1;
+              }
+              int eq = pair.indexOf('=');
+              if (eq > 0) {
+                String k = pair.substring(0, eq);
+                String v = pair.substring(eq + 1);
+                k.trim(); v.trim();
+                Serial.println("  -> " + k + " = " + v);
+                ack += k + "=" + v + ";";
+              }
+            }
+            // simulate executing the order: here you'd control motors, switches, ...
+            Serial.println("Executing order...");
+            // send a confirmation back to server
+            postResponse(String("ExecutedOrder|") + ack);
+          } else {
+            // plain text command: handle or echo
+            String resp = String("Executed: ") + line;
+            postResponse(resp);
+          }
         }
       }
     }

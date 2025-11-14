@@ -1,5 +1,6 @@
 <?php
 // Simple UI: devices | sending | receiving panels
+require_once __DIR__ . '/chat_lib.php';
 ?>
 <!DOCTYPE html>
 <html>
@@ -33,6 +34,11 @@
             <label for="messageInput">Message</label>
             <input type="text" id="messageInput" placeholder="e.g. train go to station 2">
             <button id="sendBtn">Send</button>
+
+            <hr>
+            <label for="orderInput">Order (k=v;k2=v2)</label>
+            <input type="text" id="orderInput" placeholder="e.g. action=move;from=1;to=2;switch1=on">
+            <button id="sendOrderBtn">Send Order</button>
         </div>
 
         <div class="panel">
@@ -109,6 +115,27 @@
                     alert('Reset failed: ' + text);
                 }
             }catch(e){ alert('Reset error'); }
+        });
+
+        document.getElementById('sendOrderBtn').addEventListener('click', async function(){
+            const device = deviceSelect.value;
+            const order = document.getElementById('orderInput').value.trim();
+            if(!device || !order) return alert('Select device and enter order');
+            try{
+                const body = new URLSearchParams();
+                body.append('action','send_order');
+                body.append('device', device);
+                body.append('order', order);
+                const res = await fetch(api, { method: 'POST', body });
+                const text = await res.text();
+                if(res.ok) {
+                    alert('Order sent');
+                    document.getElementById('orderInput').value = '';
+                    await refreshLog();
+                } else {
+                    alert('Send order failed: ' + text);
+                }
+            } catch(e){ alert('Error sending order'); }
         });
 
         // initial
