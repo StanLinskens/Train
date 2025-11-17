@@ -4,7 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Train</title>
+  <title>LEGO Train Logic Game - Interactive Physical Puzzle Project</title>
+  <meta name="description" content="An innovative LEGO train logic game combining physical play with smart automation. ESP32-powered interactive puzzles that challenge problem-solving skills.">
+  <meta name="keywords" content="LEGO, train, logic game, ESP32, Home Assistant, interactive puzzle, educational game, automation">
   <!-- preload font to reduce FOUC when online -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="inc/css/style.css">
@@ -21,8 +23,13 @@
       </button>
       <ul id="primary-nav" class="nav-links">
         <li><a href="#hero">Home</a></li>
-        <li><a href="#about">About Project</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#game">The Game</a></li>
+        <li><a href="#development">Development</a></li>
+        <li><a href="#technical">Technical</a></li>
+        <li><a href="#gallery">Gallery</a></li>
         <li><a href="#team">Team</a></li>
+        <li><a href="#contact">Contact</a></li>
       </ul>
     </nav>
   </header>
@@ -31,51 +38,407 @@
     <!-- Hero Section -->
     <section id="hero" class="hero reveal">
       <div class="hero-content">
-        <h1>Welcome to Train Project</h1>
-        <p>Innovating the future of railway technology and travel.</p>
-        <a href="#about" class="btn">Learn More</a>
+        <h1>LEGO Train Logic Game</h1>
+        <p>An innovative real-life logic puzzle using LEGO trains, sensors, and smart automation to create engaging problem-solving challenges.</p>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-number">7</span>
+            <span class="stat-label">Team Members</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">ESP32</span>
+            <span class="stat-label">Powered</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">∞</span>
+            <span class="stat-label">Possibilities</span>
+          </div>
+        </div>
+        <div class="hero-buttons">
+          <a href="#game" class="btn primary">Explore the Game</a>
+          <a href="#development" class="btn secondary">Development Process</a>
+        </div>
       </div>
     </section>
 
     <!-- About Project -->
     <section id="about" class="about reveal">
-      <h2>About the Project</h2>
-      <p>
-        The Train Project is a modern initiative focused on creating an efficient, sustainable,
-        and smart railway experience. Our mission is to enhance connectivity, reduce carbon footprint,
-        and bring innovation to transportation systems worldwide.
-      </p>
+      <div class="container">
+        <h2>About the Project</h2>
+        <div class="about-content">
+          <div class="about-text">
+            <p>
+              The LEGO Train Logic Game represents the perfect fusion of physical play and digital innovation. 
+              Our project transforms traditional LEGO train sets into an interactive, intelligent gaming platform 
+              that challenges players with real-world logic puzzles.
+            </p>
+            <p>
+              Using ESP32 microcontrollers, sensors, and Home Assistant integration, we've created a system 
+              where physical train movements trigger digital responses, creating an engaging bridge between 
+              the tangible and virtual worlds.
+            </p>
+            <div class="features-grid">
+              <div class="feature">
+                <div class="feature-icon">🚂</div>
+                <h3>Physical Interaction</h3>
+                <p>Real LEGO trains controlled by smart automation</p>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">🧠</div>
+                <h3>Logic Puzzles</h3>
+                <p>Challenging problems that require strategic thinking</p>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>Smart Technology</h3>
+                <p>ESP32 and Home Assistant powered automation</p>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <h3>Educational Value</h3>
+                <p>Learning through play and problem-solving</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Game Overview Section -->
+    <section id="game" class="game-section reveal">
+      <div class="container">
+        <h2>The Game Experience</h2>
+        <div class="game-content">
+          <div class="game-description">
+            <h3>How It Works</h3>
+            <p>
+              Players are presented with logic puzzles that must be solved by strategically moving LEGO trains 
+              through a track system. Each movement is detected by sensors and processed by our smart system, 
+              providing real-time feedback and validation.
+            </p>
+            
+            <div class="game-steps">
+              <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                  <h4>Analyze the Puzzle</h4>
+                  <p>Study the track layout and understand the objective</p>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                  <h4>Plan Your Strategy</h4>
+                  <p>Determine the sequence of train movements needed</p>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                  <h4>Execute & Learn</h4>
+                  <p>Move the trains and receive instant feedback</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="game-features">
+            <h3>Game Features</h3>
+            <ul class="feature-list">
+              <li>Multiple difficulty levels</li>
+              <li>Real-time sensor feedback</li>
+              <li>Progress tracking</li>
+              <li>Educational challenges</li>
+              <li>Collaborative problem-solving</li>
+              <li>Expandable track systems</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Development Process Section -->
+    <section id="development" class="development-section reveal">
+      <div class="container">
+        <h2>Development Journey</h2>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-marker">1</div>
+            <div class="timeline-content">
+              <h3>Concept & Planning</h3>
+              <p>Initial brainstorming sessions to define the game mechanics and technical requirements. We explored various approaches to combine physical LEGO elements with digital intelligence.</p>
+              <div class="timeline-tech">
+                <span class="tech-tag">Research</span>
+                <span class="tech-tag">Planning</span>
+                <span class="tech-tag">Design</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="timeline-marker">2</div>
+            <div class="timeline-content">
+              <h3>Hardware Setup</h3>
+              <p>Setting up the ESP32 microcontrollers, sensors, and LEGO train integration. This phase involved extensive testing of sensor accuracy and train control mechanisms.</p>
+              <div class="timeline-tech">
+                <span class="tech-tag">ESP32</span>
+                <span class="tech-tag">Sensors</span>
+                <span class="tech-tag">LEGO Integration</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="timeline-marker">3</div>
+            <div class="timeline-content">
+              <h3>Software Development</h3>
+              <p>Developing the core logic system, Home Assistant integration, and user interface. Multiple iterations were needed to achieve smooth real-time responsiveness.</p>
+              <div class="timeline-tech">
+                <span class="tech-tag">Arduino IDE</span>
+                <span class="tech-tag">Home Assistant</span>
+                <span class="tech-tag">Web Interface</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="timeline-marker">4</div>
+            <div class="timeline-content">
+              <h3>Testing & Refinement</h3>
+              <p>Extensive testing phases with various puzzle configurations and user feedback integration. Fine-tuning sensor sensitivity and game logic algorithms.</p>
+              <div class="timeline-tech">
+                <span class="tech-tag">User Testing</span>
+                <span class="tech-tag">Debugging</span>
+                <span class="tech-tag">Optimization</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Technical Specifications Section -->
+    <section id="technical" class="technical-section reveal">
+      <div class="container">
+        <h2>Technical Specifications</h2>
+        <div class="tech-grid">
+          <div class="tech-category">
+            <h3>Hardware Components</h3>
+            <div class="tech-list">
+              <div class="tech-item">
+                <strong>ESP32 Microcontroller</strong>
+                <p>Main processing unit with WiFi capabilities for Home Assistant integration</p>
+              </div>
+              <div class="tech-item">
+                <strong>Proximity Sensors</strong>
+                <p>Detect train positions and movements with high accuracy</p>
+              </div>
+              <div class="tech-item">
+                <strong>LEGO Train Motors</strong>
+                <p>Controlled via PWM signals for precise speed and direction control</p>
+              </div>
+              <div class="tech-item">
+                <strong>Track Sensors</strong>
+                <p>Monitor train locations throughout the track system</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tech-category">
+            <h3>Software Stack</h3>
+            <div class="tech-list">
+              <div class="tech-item">
+                <strong>Arduino Framework</strong>
+                <p>ESP32 programming environment for hardware control</p>
+              </div>
+              <div class="tech-item">
+                <strong>Home Assistant</strong>
+                <p>Central automation hub for device coordination</p>
+              </div>
+              <div class="tech-item">
+                <strong>MQTT Protocol</strong>
+                <p>Lightweight messaging for real-time communication</p>
+              </div>
+              <div class="tech-item">
+                <strong>Web Interface</strong>
+                <p>HTML/CSS/JavaScript for user interaction and monitoring</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="code-showcase">
+          <h3>Code Example</h3>
+          <div class="code-block">
+            <pre><code>*code example*</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="gallery-section reveal">
+      <div class="container">
+        <h2>Project Gallery</h2>
+        <p class="gallery-intro">Explore the development process and see our LEGO Train Logic Game in action</p>
+        
+        <div class="gallery-grid">
+          <div class="gallery-item">
+            <div class="gallery-placeholder">
+              <div class="placeholder-icon">🚂</div>
+              <p>Train Setup</p>
+            </div>
+          </div>
+          <div class="gallery-item">
+            <div class="gallery-placeholder">
+              <div class="placeholder-icon">⚡</div>
+              <p>ESP32 Integration</p>
+            </div>
+          </div>
+          <div class="gallery-item">
+            <div class="gallery-placeholder">
+              <div class="placeholder-icon">🔧</div>
+              <p>Development Process</p>
+            </div>
+          </div>
+          <div class="gallery-item">
+            <div class="gallery-placeholder">
+              <div class="placeholder-icon">🎮</div>
+              <p>Game in Action</p>
+            </div>
+          </div>
+          <div class="gallery-item">
+            <div class="gallery-placeholder">
+              <div class="placeholder-icon">👥</div>
+              <p>Team Collaboration</p>
+            </div>
+          </div>
+          <div class="gallery-item">
+            <div class="gallery-placeholder">
+              <div class="placeholder-icon">📊</div>
+              <p>Testing Results</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="gallery-note">
+          <p><em>Gallery images will be added as the project progresses. Check back for updates!</em></p>
+        </div>
+      </div>
     </section>
 
     <!-- Team Section -->
     <section id="team" class="team reveal">
-      <h2>Meet Our Team</h2>
-      <div class="team-container">
-        <div class="team-carousel">
-          <div class="team-member">
-            <img src="assets/image/member1.jpg" alt="Team Member 1">
-            <h3>Stan Linskens</h3>
-            <p>Project Lead - Software Developer</p>
+      <div class="container">
+        <h2>Meet Our Team</h2>
+        <p class="team-intro">The talented individuals behind the LEGO Train Logic Game project</p>
+        <div class="team-container">
+          <div class="team-carousel">
+            <div class="team-member">
+              <img src="assets/image/member1.jpg" alt="Stan Linskens">
+              <h3>Stan Linskens</h3>
+              <p>Project Lead - Software Developer</p>
+              <div class="member-skills">
+                <span class="skill">Leadership</span>
+                <span class="skill">Full-Stack Development</span>
+                <span class="skill">System Architecture</span>
+              </div>
+            </div>
+            <div class="team-member">
+              <img src="assets/image/member2.jpg" alt="Wout Vereijken">
+              <h3>Wout Vereijken</h3>
+              <p>Software Developer</p>
+              <div class="member-skills">
+                <span class="skill">Web Development</span>
+                <span class="skill">UI/UX Design</span>
+                <span class="skill">Frontend</span>
+              </div>
+            </div>
+            <div class="team-member">
+              <img src="assets/image/member3.jpg" alt="Lucas Knol">
+              <h3>Lucas Knol</h3>
+              <p>Software Developer</p>
+              <div class="member-skills">
+                <span class="skill">Backend Development</span>
+                <span class="skill">Database Design</span>
+                <span class="skill">API Integration</span>
+              </div>
+            </div>
+            <div class="team-member">
+              <img src="assets/image/member4.jpg" alt="Kacper Rebelski">
+              <h3>Kacper Rebelski</h3>
+              <p>Production Lead</p>
+              <div class="member-skills">
+                <span class="skill">Hardware Integration</span>
+                <span class="skill">Quality Assurance</span>
+                <span class="skill">Project Management</span>
+              </div>
+            </div>
+            <div class="team-member">
+              <img src="assets/image/member5.jpg" alt="Akoc Wol">
+              <h3>Akoc Wol</h3>
+              <p>Software Developer</p>
+              <div class="member-skills">
+                <span class="skill">Embedded Systems</span>
+                <span class="skill">IoT Development</span>
+                <span class="skill">Automation</span>
+              </div>
+            </div>
           </div>
-          <div class="team-member">
-            <img src="assets/image/member2.jpg" alt="Team Member 2">
-            <h3>Wout Vereijken</h3>
-            <p>Software Developer</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section reveal">
+      <div class="container">
+        <h2>Get In Touch</h2>
+        <p class="contact-intro">Interested in our project? Have questions or want to collaborate? We'd love to hear from you!</p>
+        
+        <div class="contact-content">
+          <div class="contact-info">
+            <h3>Project Information</h3>
+            <div class="contact-item">
+              <strong>Project Status:</strong> Active Development
+            </div>
+            <div class="contact-item">
+              <strong>Technology:</strong> ESP32, Home Assistant, LEGO
+            </div>
+            <div class="contact-item">
+              <strong>Team Size:</strong> 7 Developers
+            </div>
+            <div class="contact-item">
+              <strong>Website:</strong> <a href="http://Woutvereijken.nl" target="_blank">Woutvereijken.nl</a>
+            </div>
           </div>
-          <div class="team-member">
-            <img src="assets/image/member3.jpg" alt="Team Member 3">
-            <h3>Lucas Knol</h3>
-            <p>Software Developer</p>
-          </div>
-          <div class="team-member">
-            <img src="assets/image/member4.jpg" alt="Team Member 4">
-            <h3>Kacper Rebelski</h3>
-            <p>Production Lead</p>
-          </div>
-          <div class="team-member">
-            <img src="assets/image/member5.jpg" alt="Team Member 5">
-            <h3>Akoc Wol</h3>
-            <p>Software developer</p>
+          
+          <div class="contact-form">
+            <h3>Send us a Message</h3>
+            <form class="contact-form-element">
+              <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required>
+              </div>
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+              </div>
+              <div class="form-group">
+                <label for="subject">Subject</label>
+                <select id="subject" name="subject" required>
+                  <option value="">Select a topic</option>
+                  <option value="collaboration">Collaboration Opportunity</option>
+                  <option value="technical">Technical Question</option>
+                  <option value="general">General Inquiry</option>
+                  <option value="feedback">Project Feedback</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" rows="5" required></textarea>
+              </div>
+              <button type="submit" class="btn primary">Send Message</button>
+            </form>
           </div>
         </div>
       </div>
@@ -84,7 +447,10 @@
 
   <!-- Footer -->
   <footer>
-    <p>@footer</p>
+    <div class="container">
+      <p>&copy; 2024 LEGO Train Logic Game Project. Built with passion by our amazing team.</p>
+      <p>Explore more at <a href="http://Woutvereijken.nl" target="_blank" style="color: var(--accent-color);">Woutvereijken.nl</a></p>
+    </div>
   </footer>
 
   <script src="inc/js/main.js"></script>
