@@ -279,14 +279,30 @@ nav {
     max-width: 300px;
     flex: 0 0 auto;
     padding: 1rem;
+    padding-bottom: 3.5rem; /* noticeably larger bottom area */
+    height: 460px; /* slightly taller to accommodate longer skills */
     transition: transform 0.28s ease, box-shadow 0.28s ease;
 }
 
 .team-member img {
-    /* width: 100%; */
-    height: 300px;
+    width: 100%;
+    height: 260px; /* slightly reduced so bottom area is larger */
+    object-fit: cover;
+    display: block;
     border-radius: 0.5rem;
     margin-bottom: 0.75rem;
+}
+
+/* Keep headings and paragraphs predictable */
+.team-member h3 {
+    margin: 0.25rem 0 0.25rem;
+    line-height: 1.15;
+}
+
+.team-member p {
+    margin: 0 0 0.75rem;
+    color: #666;
+    font-size: 0.95rem;
 }
 
 .team-member:hover {
@@ -367,6 +383,16 @@ nav {
     .team-member {
         min-width: 80%;
         max-width: 80%;
+    }
+
+    /* Mobile: allow cards to size naturally and keep images responsive */
+    .team-member {
+        height: auto;
+    }
+
+    .team-member img {
+        height: auto;
+        aspect-ratio: 5 / 4;
     }
 }
 
@@ -743,7 +769,7 @@ nav {
 .skill {
     display: inline-block;
     background: var(--accent-color);
-    color: var(--primary-color);
+    color: #fff;
     padding: 0.25rem 0.75rem;
     border-radius: 1rem;
     font-size: 0.8rem;
