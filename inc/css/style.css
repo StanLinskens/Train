@@ -364,10 +364,7 @@ nav {
         display: flex;
     }
 
-    .team-member {
-        min-width: 80%;
-        max-width: 80%;
-    }
+
 }
 
 /* Larger screens spacing */
