@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>M5Stack Core2 BLE UART Debug Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+    }
+    #status {
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      background: #eee;
+    }
+    #log {
+      border: 1px solid #ccc;
+      height: 260px;
+      padding: 0.5rem;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+      background: #f9f9f9;
+    }
+    #debugInfo {
+      font-size: 0.9rem;
+      color: #555;
+      margin-top: 1rem;
+      border-top: 1px solid #ccc;
+      padding-top: 0.5rem;
+    }
+    button {
+      margin-top: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>M5Stack Core2 BLE UART Debug Demo</h1>
+
+  <div id="status">Status: page loaded, not connected.</div>
+
+  <button id="connectBtn">Connect to BLE device</button>
+
+  <div style="margin-top: 1rem;">
+    <input id="textInput" type="text" placeholder="Type message..." size="40" />
+    <button id="sendBtn" disabled>Send</button>
+  </div>
+
+  <h3>Log</h3>
+  <div id="log"></div>
+
+  <div id="debugInfo">
+    <strong>Debug info:</strong><br />
+    <span id="webBtSupport"></span><br />
+    <span id="protoInfo"></span><br />
+    <span id="uaInfo"></span><br />
+  </div>
+
+  <script>
+    // Nordic UART Service UUID's volgens M5 bleuart docs
+    // https://uiflow-micropython.readthedocs.io/en/2.1.4/system/bleuart.html 
+    const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+    const NUS_RX_CHAR_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'; // schrijven naar M5
+    const NUS_TX_CHAR_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // notificaties van M5
+
+    let nusRxChar = null;
+    let nusTxChar = null;
+    let connectedDevice = null;
+    let gattServer = null;
+
+    const logEl = document.getElementById('log');
+    const statusEl = document.getElementById('status');
+    const connectBtn = document.getElementById('connectBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const textInput = document.getElementById('textInput');
+    const webBtSupportEl = document.getElementById('webBtSupport');
+    const protoInfoEl = document.getElementById('protoInfo');
+    const uaInfoEl = document.getElementById('uaInfo');
+
+    function log(msg) {
+      const time = new Date().toLocaleTimeString();
+      const line = `[${time}] ${msg}`;
+      console.log(line);
+      logEl.textContent += line + '\n';
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function setStatus(msg) {
+      statusEl.textContent = 'Status: ' + msg;
+      console.log('STATUS:', msg);
+    }
+
+    // Init debug info
+    (function initDebugInfo() {
+      const hasWebBt = 'bluetooth' in navigator;
+      webBtSupportEl.textContent =
+        'Web Bluetooth support: ' + (hasWebBt ? 'YES' : 'NO');
+      protoInfoEl.textContent =
+        'Location protocol: ' +
+        window.location.protocol +
+        ' (needs https: or http://localhost)';
+      uaInfoEl.textContent = 'UserAgent: ' + navigator.userAgent;
+
+      if (!hasWebBt) {
+        setStatus('Web Bluetooth NOT supported in this browser.');
+        log(
+          'ERROR: navigator.bluetooth is not available. Try Chrome/Edge op https of http://localhost'
+        );
+      } else {
+        setStatus('Web Bluetooth supported. Not connected.');
+      }
+    })();
+
+    async function connect() {
+      if (!('bluetooth' in navigator)) {
+        setStatus('Web Bluetooth NOT supported.');
+        log('navigator.bluetooth is missing. Aborting connect().');
+        return;
+      }
+
+      try {
+        log('Requesting Bluetooth device (acceptAllDevices: true)...');
+
+        // BELANGRIJK: zelfde als VueUse-demo → acceptAllDevices: true
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: [NUS_SERVICE_UUID],
+        });
+
+        connectedDevice = device;
+        log(`Device selected: name=${device.name}, id=${device.id}`);
+
+        device.addEventListener('gattserverdisconnected', () => {
+          setStatus('Disconnected from device.');
+          sendBtn.disabled = false;
+          log('Device disconnected.');
+        });
+
+        setStatus('Connecting GATT server...');
+        gattServer = await device.gatt.connect();
+        log('GATT server connected.');
+
+        // ---- DEBUG: alle services & characteristics dumpen ----
+        try {
+          log('Enumerating primary services & characteristics...');
+          const services = await gattServer.getPrimaryServices();
+          for (const service of services) {
+            log(` Service: ${service.uuid}`);
+            const chars = await service.getCharacteristics();
+            for (const c of chars) {
+              const props = Object.keys(c.properties)
+                .filter((p) => c.properties[p])
+                .join(',');
+              log(`   Characteristic: ${c.uuid} (props: ${props})`);
+            }
+          }
+          log('Service/characteristic enumeration complete.');
+        } catch (e) {
+          log('WARNING: could not enumerate services/characteristics: ' + e);
+        }
+
+        // ---- NUS service pakken (voor M5 BLEUART) ----
+        log('Getting NUS service ' + NUS_SERVICE_UUID + ' ...');
+        const nusService = await gattServer.getPrimaryService(NUS_SERVICE_UUID);
+        log('NUS service obtained.');
+
+        log('Getting RX characteristic ' + NUS_RX_CHAR_UUID + ' ...');
+        nusRxChar = await nusService.getCharacteristic(NUS_RX_CHAR_UUID);
+        log('RX characteristic obtained.');
+
+        log('Getting TX characteristic ' + NUS_TX_CHAR_UUID + ' ...');
+        nusTxChar = await nusService.getCharacteristic(NUS_TX_CHAR_UUID);
+        log('TX characteristic obtained.');
+
+        log('Starting notifications on TX characteristic...');
+        await nusTxChar.startNotifications();
+        nusTxChar.addEventListener('characteristicvaluechanged', (event) => {
+          const value = event.target.value;
+          const text = new TextDecoder().decode(value);
+          log('From M5: ' + JSON.stringify(text));
+        });
+        log('Notifications started.');
+
+        sendBtn.disabled = false;
+        setStatus(
+          'Connected to ' + (device.name || '(no name)') + '. Ready to send/receive.'
+        );
+        log('Connection complete. You can now send data.');
+      } catch (err) {
+        console.error('Connect error:', err);
+        setStatus('Error during connect. See log.');
+        log(
+          'ERROR in connect(): ' +
+            (err && err.message ? err.message : JSON.stringify(err))
+        );
+      }
+    }
+
+    async function send() {
+      if (!nusRxChar) {
+        log('Not connected (nusRxChar is null).');
+        setStatus('Not connected. Cannot send.');
+        return;
+      }
+
+      const text = textInput.value;
+      if (!text) {
+        log('Nothing to send (input empty).');
+        return;
+      }
+
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
+
+      try {
+        log('Writing to RX characteristic: ' + JSON.stringify(text));
+        await nusRxChar.writeValue(data);
+        log('To M5: ' + JSON.stringify(text));
+      } catch (err) {
+        console.error('Send error:', err);
+        setStatus('Error during send. See log.');
+        log(
+          'ERROR in send(): ' +
+            (err && err.message ? err.message : JSON.stringify(err))
+        );
+      }
+    }
+
+    connectBtn.addEventListener('click', () => {
+      log('--- Connect button clicked ---');
+      connect();
+    });
+
+    sendBtn.addEventListener('click', () => {
+      log('--- Send button clicked ---');
+      send();
+    });
+
+    textInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        log('--- Enter pressed in text input ---');
+        send();
+      }
+    });
+  </script>
+</body>
+</html>
