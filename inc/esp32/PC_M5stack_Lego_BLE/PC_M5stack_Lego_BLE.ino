@@ -1,10 +1,34 @@
 #include <Arduino.h>
 #include "BleUart.h"
 #include "LegoHub.h"
+#include <M5Unified.h>
 
 // 1) MAC-adres van de LEGO trein-hub
 //    → aanpassen aan jouw hub (via BLE-scanner/app gevonden)
 const char* TRAIN_HUB_MAC = "9C:9A:C0:1B:C0:EA";   // TODO: aanpassen
+
+
+
+int counter = 0;
+
+// Draws the base UI
+void drawUI() {
+    M5.Display.clear();
+    M5.Display.setCursor(10, 10);
+    M5.Display.setTextSize(3);
+    M5.Display.setTextColor(WHITE);
+
+    M5.Display.println("lego ble hub");
+
+    M5.Display.setTextSize(2);
+    M5.Display.println("-----------------------");
+    M5.Display.println("A = forward");
+    M5.Display.println("B = backward");
+    M5.Display.println("C = connect bluetooth");
+    M5.Display.println("(M5 LEGO Bridge)");
+
+    M5.Display.println("-----------------------");
+}
 
 // 2) Command-handler: wat doen we met berichten van pc/telefoon?
 void handleCommand(const String& cmd) {
@@ -61,6 +85,11 @@ void setup() {
 
   // LEGO hub client (mac-adres wordt hier doorgegeven)
   LegoHub_Init(TRAIN_HUB_MAC);
+
+  auto cfg = M5.config();
+  M5.begin(cfg);
+
+  drawUI();
 }
 
 void loop() {
@@ -76,5 +105,28 @@ void loop() {
     handleCommand(msg);
   }
 
+  M5.update();
+
+    // Button A → Counter
+    if (M5.BtnA.wasPressed()) {
+        MoveTrain(50);
+        return;
+    }
+
+    // Button B → Time
+    if (M5.BtnB.wasPressed()) {
+        MoveTrain(-50);
+        return;
+    }
+
+    // Button C → Clear + redraw
+    if (M5.BtnC.wasPressed()) {
+        BleUart_Init("M5 LEGO Bridge");
+        LegoHub_Init(TRAIN_HUB_MAC);
+    }
+
   delay(10);
 }
+
+
+
