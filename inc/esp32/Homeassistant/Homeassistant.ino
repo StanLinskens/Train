@@ -1,20 +1,80 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include "BLEDevice.h"
 
 // WiFi credentials
-const char* ssid = "MMS";
-const char* password = "1M2a3r4l5i6n7t8t9";
+const char* ssid = "Stan_moto";
+const char* password = "Stan1203";
 
 // PHP endpoint
 const char* serverName = "http://stan.1pc.nl/Train/inc/php/data.php";
 
 String deviceId;
 
-String urlEncode(const String &str) {
+static BLEAddress trainAddress("AA:BB:CC:DD:EE:FF");  // ← change to real MAC
+static BLEUUID serviceUUID("1234");
+static BLEUUID charUUID("5678");
+
+BLERemoteCharacteristic* trainChar = nullptr;
+BLEClient* bleClient = nullptr;
+
+String lastBleResponse = "";
+
+bool connectToTrain() {
+  if (bleClient == nullptr) {
+    bleClient = BLEDevice::createClient();
+  }
+  if (bleClient->isConnected()) return true;
+
+  Serial.println("Connecting to train...");
+  if (!bleClient->connect(trainAddress)) {
+    Serial.println("BLE connect failed");
+    return false;
+  }
+
+  BLERemoteService* svc = bleClient->getService(serviceUUID);
+  if (!svc) {
+    Serial.println("BLE service not found");
+    return false;
+  }
+
+  trainChar = svc->getCharacteristic(charUUID);
+  if (!trainChar) {
+    Serial.println("BLE characteristic not found");
+    return false;
+  }
+
+  // Register notify using lambda (works in ESP32 Arduino 3.3.3+)
+  trainChar->registerForNotify([](BLERemoteCharacteristic* c, uint8_t* data, size_t length, bool isNotify) {
+    lastBleResponse = "";
+    for (size_t i = 0; i < length; i++) {
+      lastBleResponse += (char)data[i];
+    }
+    Serial.println("Received BLE notify: " + lastBleResponse);
+  });
+  Serial.println("BLE connected to Train Controller!");
+  return true;
+}
+
+bool sendBLE(const String& message) {
+  if (!connectToTrain()) return false;
+
+  trainChar->writeValue(message.c_str());
+  Serial.println("BLE sent: " + message);
+  return true;
+}
+
+String getLastBLEResponse() {
+  String temp = lastBleResponse;
+  lastBleResponse = "";
+  return temp;
+}
+
+String urlEncode(const String& str) {
   String encoded = "";
   for (size_t i = 0; i < str.length(); i++) {
     char c = str[i];
-    if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c=='-' || c=='_' || c=='.' || c=='~') {
+    if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~') {
       encoded += c;
     } else if (c == ' ') {
       encoded += '+';
@@ -28,7 +88,7 @@ String urlEncode(const String &str) {
 }
 
 // Post a simple message back to server (device -> web)
-void postResponse(const String &msg) {
+void postResponse(const String& msg) {
   HTTPClient http;
   String u = String(serverName) + "?action=post_response&device=" + urlEncode(deviceId) + "&msg=" + urlEncode(msg);
   http.begin(u);
@@ -42,34 +102,8 @@ void postResponse(const String &msg) {
   http.end();
 }
 
-// --- LED setup (RGB) ---
-const int PIN_R = 23; // red
-const int PIN_G = 22; // green
-const int PIN_B = 21; // blue
-
-void setupLEDs() {
-  // Ensure the pins are configured as outputs first
-  pinMode(PIN_R, OUTPUT);
-  pinMode(PIN_G, OUTPUT);
-  pinMode(PIN_B, OUTPUT);
-
-  // initialize outputs to off
-  analogWrite(PIN_R, 0);
-  analogWrite(PIN_G, 0);
-  analogWrite(PIN_B, 0);
-}
-
-// Set RGB color with 0-255 values
-void setColor(uint8_t r, uint8_t g, uint8_t b) {
-  // If the board's analogWrite range is different, scale accordingly.
-  analogWrite(PIN_R, r);
-  analogWrite(PIN_G, g);
-  analogWrite(PIN_B, b);
-  Serial.printf("Set color R=%u G=%u B=%u\n", r, g, b);
-}
-
 // Helper to send structured status updates back to server
-void sendStatus(const String &statusType, const String &message, int progress = -1) {
+void sendStatus(const String& statusType, const String& message, int progress = -1) {
   // Format: STATUS|type=<type>;msg=<message>;progress=<n>
   String payload = "STATUS|type=" + statusType + ";msg=" + message;
   if (progress >= 0) payload += ";progress=" + String(progress);
@@ -126,7 +160,6 @@ void checkMessages() {
     // parse order messages: format ORDER|k=v;k2=v2
     if (line.startsWith("ORDER|")) {
       // send initial ack
-      sendStatus("received", "order received");
 
       String body = line.substring(6);
       // parse into keys/values
@@ -149,7 +182,8 @@ void checkMessages() {
         if (eq > 0) {
           String k = pair.substring(0, eq);
           String v = pair.substring(eq + 1);
-          k.trim(); v.trim();
+          k.trim();
+          v.trim();
           keys[pairCount] = k;
           vals[pairCount] = v;
           pairCount++;
@@ -164,39 +198,43 @@ void checkMessages() {
         if (keys[i] == "action") action = vals[i];
       }
 
-      if (action == "led") {
-        // find r,g,b values (0-255), default 0
-        int r = 0, g = 0, b = 0;
-        for (int i = 0; i < pairCount; i++) {
-          if (keys[i] == "r") r = vals[i].toInt();
-          if (keys[i] == "g") g = vals[i].toInt();
-          if (keys[i] == "b") b = vals[i].toInt();
-        }
-        // send step update: setting color
-        sendStatus("step", "setting_color", 10);
-        setColor((uint8_t)r, (uint8_t)g, (uint8_t)b);
-        // simulate progress with several updates
-        for (int p = 20; p <= 100; p += 20) {
-          delay(150);
-          sendStatus("progress", "setting_color", p);
-        }
-        sendStatus("done", "color_set");
-        // final execution confirmation
-        postResponse(String("ExecutedOrder|action=led;r=") + String(r) + ";g=" + String(g) + ";b=" + String(b));
-      } else if (action == "move") {
-        // placeholder: simulate movement with realtime updates
-        sendStatus("step", "starting_move", 0);
-        for (int p = 0; p <= 100; p += 25) {
-          delay(400);
-          sendStatus("progress", "moving", p);
-        }
-        sendStatus("done", "move_complete");
-        postResponse(String("ExecutedOrder|action=move"));
-      } else {
-        // unknown order: record and ack
-        sendStatus("error", "unknown_action");
-        postResponse(String("ExecutedOrder|unknown_action"));
+      // Build the ORDER exactly as received so we can forward it to ESP32-B
+      String orderToSend = line;  // e.g. "ORDER|action=led;r=255;g=0;b=0"
+
+      // 1. Tell server we received it
+      sendStatus("received", "order received");
+
+      // 2. Send ORDER to the train (BLE)
+      if (!sendBLE(orderToSend)) {
+        sendStatus("error", "ble_send_failed");
+        postResponse("ExecutedOrder|error=ble_send_failed");
+        return;  // BLE not connected
       }
+
+      Serial.println("Order forwarded to train via BLE");
+
+      // 3. Wait for train response
+      unsigned long timeout = millis() + 5000;
+      String bleResponse = "";
+
+      while (millis() < timeout) {
+        bleResponse = getLastBLEResponse();  // We'll implement this function
+        if (bleResponse.length() > 0) break;
+        delay(50);
+      }
+
+      if (bleResponse.length() == 0) {
+        Serial.println("Train did not respond.");
+        sendStatus("error", "train_no_response");
+        postResponse("ExecutedOrder|error=train_no_response");
+        return;
+      }
+
+      // 4. Train confirmed done → forward result to server
+      Serial.println("Train response: " + bleResponse);
+      postResponse(bleResponse);
+      sendStatus("done", "order_complete");
+
     } else {
       // plain text command: handle or echo
       String resp = String("Executed: ") + line;
@@ -209,9 +247,6 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
   Serial.println("Starting ESP32 chat client");
-
-  // initialize LEDs
-  setupLEDs();
 
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
@@ -245,11 +280,11 @@ void loop() {
   }
 
   unsigned long now = millis();
-  if (now - lastPoll > 5000) { // poll every 5 seconds
+  if (now - lastPoll > 5000) {  // poll every 5 seconds
     checkMessages();
     lastPoll = now;
   }
-  if (now - lastHeartbeat > 15000) { // heartbeat every 15s
+  if (now - lastHeartbeat > 15000) {  // heartbeat every 15s
     HTTPClient http;
     String u = String(serverName) + "?action=heartbeat&device=" + urlEncode(deviceId);
     http.begin(u);
