@@ -1,29 +1,39 @@
 #include <WiFi.h>
-#include <HTTPClient.h>
 #include "BLEDevice.h"
 
 // WiFi credentials
 const char* ssid = "Stan_moto";
 const char* password = "Stan1203";
 
-// PHP endpoint
-const char* serverName = "http://stan.1pc.nl/Train/inc/php/data.php";
+// Server host/path
+const char* serverHost = "stan.1pc.nl";
+const char* serverPath = "/Train/inc/php/data.php";
 
-String deviceId;
+char deviceId[20]; // MAC address string
 
-static BLEAddress trainAddress("AA:BB:CC:DD:EE:FF");  // ← change to real MAC
+// BLE setup
+static BLEAddress trainAddress("f4:65:0B:33:79:F2");
 static BLEUUID serviceUUID("1234");
 static BLEUUID charUUID("5678");
 
 BLERemoteCharacteristic* trainChar = nullptr;
 BLEClient* bleClient = nullptr;
 
-String lastBleResponse = "";
+char lastBleResponse[128];
+bool bleResponseReady = false;
+
+// ---------- BLE ----------
+
+void notifyCallback(BLERemoteCharacteristic* c, uint8_t* data, size_t length, bool isNotify) {
+  if (length >= sizeof(lastBleResponse)) length = sizeof(lastBleResponse) - 1;
+  memcpy(lastBleResponse, data, length);
+  lastBleResponse[length] = '\0';
+  bleResponseReady = true;
+  Serial.print("Received BLE notify: "); Serial.println(lastBleResponse);
+}
 
 bool connectToTrain() {
-  if (bleClient == nullptr) {
-    bleClient = BLEDevice::createClient();
-  }
+  if (!bleClient) bleClient = BLEDevice::createClient();
   if (bleClient->isConnected()) return true;
 
   Serial.println("Connecting to train...");
@@ -33,263 +43,189 @@ bool connectToTrain() {
   }
 
   BLERemoteService* svc = bleClient->getService(serviceUUID);
-  if (!svc) {
-    Serial.println("BLE service not found");
-    return false;
-  }
+  if (!svc) { Serial.println("BLE service not found"); return false; }
 
   trainChar = svc->getCharacteristic(charUUID);
-  if (!trainChar) {
-    Serial.println("BLE characteristic not found");
-    return false;
-  }
+  if (!trainChar) { Serial.println("BLE characteristic not found"); return false; }
 
-  // Register notify using lambda (works in ESP32 Arduino 3.3.3+)
-  trainChar->registerForNotify([](BLERemoteCharacteristic* c, uint8_t* data, size_t length, bool isNotify) {
-    lastBleResponse = "";
-    for (size_t i = 0; i < length; i++) {
-      lastBleResponse += (char)data[i];
-    }
-    Serial.println("Received BLE notify: " + lastBleResponse);
-  });
+  trainChar->registerForNotify(notifyCallback);
   Serial.println("BLE connected to Train Controller!");
   return true;
 }
 
-bool sendBLE(const String& message) {
+bool sendBLE(const char* msg) {
   if (!connectToTrain()) return false;
-
-  trainChar->writeValue(message.c_str());
-  Serial.println("BLE sent: " + message);
+  trainChar->writeValue((uint8_t*)msg, strlen(msg));
+  Serial.print("BLE sent: "); Serial.println(msg);
   return true;
 }
 
-String getLastBLEResponse() {
-  String temp = lastBleResponse;
-  lastBleResponse = "";
-  return temp;
+bool getLastBLEResponse(char* buf, size_t bufsize) {
+  if (!bleResponseReady) return false;
+  strncpy(buf, lastBleResponse, bufsize);
+  buf[bufsize-1] = '\0';
+  bleResponseReady = false;
+  return true;
 }
 
-String urlEncode(const String& str) {
-  String encoded = "";
-  for (size_t i = 0; i < str.length(); i++) {
+// ---------- URL Encoding ----------
+
+void urlEncode(const char* str, char* out, size_t outSize) {
+  size_t j = 0;
+  for (size_t i = 0; str[i] && j + 4 < outSize; i++) {
     char c = str[i];
-    if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~') {
-      encoded += c;
-    } else if (c == ' ') {
-      encoded += '+';
+    if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c=='-'||c=='_'||c=='.'||c=='~') {
+      out[j++] = c;
+    } else if (c==' ') {
+      out[j++] = '+';
     } else {
-      char buf[5];
-      sprintf(buf, "%%%.2X", (unsigned char)c);
-      encoded += buf;
+      snprintf(out+j, 4, "%%%02X", (unsigned char)c);
+      j += 3;
     }
   }
-  return encoded;
+  out[j] = '\0';
 }
 
-// Post a simple message back to server (device -> web)
-void postResponse(const String& msg) {
-  HTTPClient http;
-  String u = String(serverName) + "?action=post_response&device=" + urlEncode(deviceId) + "&msg=" + urlEncode(msg);
-  http.begin(u);
-  int code = http.GET();
-  if (code > 0) {
-    String body = http.getString();
-    Serial.println("Posted response: " + body);
-  } else {
-    Serial.println("Post response error: " + String(code));
+// ---------- HTTP Request ----------
+
+bool httpGet(const char* query, char* response, size_t respSize) {
+  WiFiClient client;
+  if (!client.connect(serverHost, 80)) return false;
+
+  client.printf("GET %s?%s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n",
+                serverPath, query, serverHost);
+
+  unsigned long timeout = millis() + 5000;
+  while (!client.available() && millis() < timeout) delay(10);
+  if (!client.available()) return false;
+
+  // skip headers
+  while (client.available()) {
+    String line = client.readStringUntil('\n');
+    if (line == "\r" || line == "\n") break;
   }
-  http.end();
+
+  // read body
+  size_t idx = 0;
+  while (client.available() && idx < respSize - 1) {
+    response[idx++] = client.read();
+  }
+  response[idx] = '\0';
+  return true;
 }
 
-// Helper to send structured status updates back to server
-void sendStatus(const String& statusType, const String& message, int progress = -1) {
-  // Format: STATUS|type=<type>;msg=<message>;progress=<n>
-  String payload = "STATUS|type=" + statusType + ";msg=" + message;
-  if (progress >= 0) payload += ";progress=" + String(progress);
+// ---------- Server communication ----------
+
+void postResponse(const char* msg) {
+  char encMsg[256], encDev[32];
+  urlEncode(msg, encMsg, sizeof(encMsg));
+  urlEncode(deviceId, encDev, sizeof(encDev));
+
+  char query[512];
+  snprintf(query, sizeof(query), "action=post_response&device=%s&msg=%s", encDev, encMsg);
+
+  char resp[128];
+  if (httpGet(query, resp, sizeof(resp))) Serial.print("Posted response: "), Serial.println(resp);
+  else Serial.println("Post response failed");
+}
+
+void sendStatus(const char* type, const char* msg) {
+  char payload[256];
+  snprintf(payload, sizeof(payload), "STATUS|type=%s;msg=%s", type, msg);
   postResponse(payload);
 }
 
 void registerDevice() {
-  HTTPClient http;
-  String u = String(serverName) + "?action=connect&device=" + urlEncode(deviceId);
-  http.begin(u);
-  int code = http.GET();
-  if (code > 0) {
-    String body = http.getString();
-    Serial.println("Register response: " + body);
-  } else {
-    Serial.println("Register HTTP error: " + String(code));
-  }
-  http.end();
+  char encDev[32]; urlEncode(deviceId, encDev, sizeof(encDev));
+  char query[128];
+  snprintf(query, sizeof(query), "action=connect&device=%s", encDev);
+
+  char resp[128];
+  if (httpGet(query, resp, sizeof(resp))) Serial.print("Register response: "), Serial.println(resp);
+  else Serial.println("Register failed");
 }
 
-// Poll server for pending messages and process them
+// ---------- Server polling ----------
+
 void checkMessages() {
-  HTTPClient http;
-  String u = String(serverName) + "?action=get_messages&device=" + urlEncode(deviceId);
-  http.begin(u);
-  int code = http.GET();
-  if (code <= 0) {
-    Serial.println("get_messages HTTP error: " + String(code));
-    http.end();
-    return;
-  }
+  char encDev[32]; urlEncode(deviceId, encDev, sizeof(encDev));
+  char query[128];
+  snprintf(query, sizeof(query), "action=get_messages&device=%s", encDev);
 
-  String payload = http.getString();
-  http.end();
+  char payload[512];
+  if (!httpGet(query, payload, sizeof(payload))) { Serial.println("get_messages failed"); return; }
 
-  if (payload.length() == 0) return;
-  Serial.println("--- Received commands ---");
+  char* line = strtok(payload, "\n");
+  while (line) {
+    if (strlen(line) == 0) { line = strtok(nullptr, "\n"); continue; }
+    Serial.print("CMD: "); Serial.println(line);
 
-  int start = 0;
-  while (start < payload.length()) {
-    int nl = payload.indexOf('\n', start);
-    String line;
-    if (nl == -1) {
-      line = payload.substring(start);
-      start = payload.length();
-    } else {
-      line = payload.substring(start, nl);
-      start = nl + 1;
-    }
-    line.trim();
-    if (line.length() == 0) continue;
-
-    Serial.println("CMD: " + line);
-    // parse order messages: format ORDER|k=v;k2=v2
-    if (line.startsWith("ORDER|")) {
-      // send initial ack
-
-      String body = line.substring(6);
-      // parse into keys/values
-      const int MAX_PAIRS = 20;
-      String keys[MAX_PAIRS];
-      String vals[MAX_PAIRS];
-      int pairCount = 0;
-      int idx = 0;
-      while (idx < body.length() && pairCount < MAX_PAIRS) {
-        int sc = body.indexOf(';', idx);
-        String pair;
-        if (sc == -1) {
-          pair = body.substring(idx);
-          idx = body.length();
-        } else {
-          pair = body.substring(idx, sc);
-          idx = sc + 1;
-        }
-        int eq = pair.indexOf('=');
-        if (eq > 0) {
-          String k = pair.substring(0, eq);
-          String v = pair.substring(eq + 1);
-          k.trim();
-          v.trim();
-          keys[pairCount] = k;
-          vals[pairCount] = v;
-          pairCount++;
-          Serial.println("  -> " + k + " = " + v);
-        }
-      }
-
-      // execute known action types
-      // supported: action=led (set rgb), action=move (placeholder)
-      String action = "";
-      for (int i = 0; i < pairCount; i++) {
-        if (keys[i] == "action") action = vals[i];
-      }
-
-      // Build the ORDER exactly as received so we can forward it to ESP32-B
-      String orderToSend = line;  // e.g. "ORDER|action=led;r=255;g=0;b=0"
-
-      // 1. Tell server we received it
+    if (strncmp(line, "ORDER|", 6) == 0) {
       sendStatus("received", "order received");
 
-      // 2. Send ORDER to the train (BLE)
-      if (!sendBLE(orderToSend)) {
+      if (!sendBLE(line)) {
         sendStatus("error", "ble_send_failed");
         postResponse("ExecutedOrder|error=ble_send_failed");
-        return;  // BLE not connected
+        return;
       }
 
       Serial.println("Order forwarded to train via BLE");
 
-      // 3. Wait for train response
+      char bleResp[128];
       unsigned long timeout = millis() + 5000;
-      String bleResponse = "";
-
       while (millis() < timeout) {
-        bleResponse = getLastBLEResponse();  // We'll implement this function
-        if (bleResponse.length() > 0) break;
+        if (getLastBLEResponse(bleResp, sizeof(bleResp))) break;
         delay(50);
       }
 
-      if (bleResponse.length() == 0) {
-        Serial.println("Train did not respond.");
+      if (strlen(bleResp) == 0) {
         sendStatus("error", "train_no_response");
         postResponse("ExecutedOrder|error=train_no_response");
-        return;
+      } else {
+        Serial.print("Train response: "); Serial.println(bleResp);
+        postResponse(bleResp);
+        sendStatus("done", "order_complete");
       }
-
-      // 4. Train confirmed done → forward result to server
-      Serial.println("Train response: " + bleResponse);
-      postResponse(bleResponse);
-      sendStatus("done", "order_complete");
-
     } else {
-      // plain text command: handle or echo
-      String resp = String("Executed: ") + line;
+      char resp[256];
+      snprintf(resp, sizeof(resp), "Executed: %s", line);
       postResponse(resp);
     }
-  }
-}
 
-void setup() {
-  Serial.begin(115200);
-  delay(1000);
-  Serial.println("Starting ESP32 chat client");
-
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to WiFi");
-  int retries = 0;
-  while (WiFi.status() != WL_CONNECTED && retries < 60) {
-    delay(500);
-    Serial.print('.');
-    retries++;
+    line = strtok(nullptr, "\n");
   }
-  Serial.println();
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi failed to connect");
-    return;
-  }
-  Serial.println("WiFi connected: " + WiFi.localIP().toString());
-
-  deviceId = WiFi.macAddress();
-  Serial.println("Device ID: " + deviceId);
-  registerDevice();
 }
 
 unsigned long lastPoll = 0;
 unsigned long lastHeartbeat = 0;
 
-void loop() {
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi disconnected, attempting reconnect...");
-    WiFi.reconnect();
-    delay(2000);
-    return;
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+  int retries = 0;
+  while (WiFi.status() != WL_CONNECTED && retries < 60) {
+    delay(500); Serial.print('.');
+    retries++;
   }
+  Serial.println();
+  if (WiFi.status() != WL_CONNECTED) { Serial.println("WiFi failed"); return; }
+  Serial.print("WiFi connected: "); Serial.println(WiFi.localIP());
+  snprintf(deviceId, sizeof(deviceId), "%s", WiFi.macAddress().c_str());
+  Serial.print("Device ID: "); Serial.println(deviceId);
+  registerDevice();
+  BLEDevice::init("");
+}
 
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) { WiFi.reconnect(); delay(2000); return; }
   unsigned long now = millis();
-  if (now - lastPoll > 5000) {  // poll every 5 seconds
-    checkMessages();
-    lastPoll = now;
-  }
-  if (now - lastHeartbeat > 15000) {  // heartbeat every 15s
-    HTTPClient http;
-    String u = String(serverName) + "?action=heartbeat&device=" + urlEncode(deviceId);
-    http.begin(u);
-    http.GET();
-    http.end();
+  if (now - lastPoll > 5000) { checkMessages(); lastPoll = now; }
+  if (now - lastHeartbeat > 15000) {
+    char encDev[32]; urlEncode(deviceId, encDev, sizeof(encDev));
+    char query[128]; snprintf(query, sizeof(query), "action=heartbeat&device=%s", encDev);
+    char resp[128]; httpGet(query, resp, sizeof(resp));
     lastHeartbeat = now;
   }
 }
