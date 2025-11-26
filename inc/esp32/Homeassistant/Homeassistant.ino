@@ -9,7 +9,7 @@ const char* password = "Stan1203";
 const char* serverHost = "stan.1pc.nl";
 const char* serverPath = "/Train/inc/php/data.php";
 
-char deviceId[20]; // MAC address string
+char deviceId[20];  // MAC address string
 
 // BLE setup
 // MAC address of the M5 Stack (update this to match your M5's MAC)
@@ -20,7 +20,7 @@ bool findM5() {
 
   BLEScan* scan = BLEDevice::getScan();
   scan->setActiveScan(true);
-  BLEScanResults rs = scan->start(5);
+  BLEScanResults* rs = scan->start(5);
 
   for (int i = 0; i < rs.getCount(); i++) {
     BLEAdvertisedDevice dev = rs.getDevice(i);
@@ -56,19 +56,19 @@ void notifyCallback(BLERemoteCharacteristic* c, uint8_t* data, size_t length, bo
   Serial.print("BLE Notify received (");
   Serial.print(length);
   Serial.print(" bytes): ");
-  
+
   if (length >= sizeof(lastBleResponse)) length = sizeof(lastBleResponse) - 1;
   memcpy(lastBleResponse, data, length);
   lastBleResponse[length] = '\0';
   bleResponseReady = true;
-  
+
   // Print as hex for debugging
   for (size_t i = 0; i < length; i++) {
     Serial.printf("%02X ", data[i]);
   }
   Serial.println();
-  
-  Serial.print("BLE Notify string: "); 
+
+  Serial.print("BLE Notify string: ");
   Serial.println(lastBleResponse);
 }
 
@@ -78,56 +78,57 @@ bool connectToTrain() {
 
   // If MAC unknown → scan once
   if (m5Address.toString() == "") {
-      if (!findM5()) return false;
+    if (!findM5()) return false;
   }
 
   Serial.print("Connecting to M5: ");
   Serial.println(m5Address.toString().c_str());
 
   if (!bleClient->connect(m5Address)) {
-      Serial.println("Connect failed");
-      m5Address = BLEAddress("");   // force rescan next time
-      return false;
+    Serial.println("Connect failed");
+    m5Address = BLEAddress("");  // force rescan next time
+    return false;
   }
 
   BLERemoteService* svc = bleClient->getService(uartServiceUUID);
-  if (!svc) { 
-    Serial.println("BLE service not found"); 
+  if (!svc) {
+    Serial.println("BLE service not found");
     bleClient->disconnect();
-    return false; 
+    return false;
   }
 
   // RX = ESP32 writes TO M5 (M5 receives)
   trainRxChar = svc->getCharacteristic(uartRxCharUUID);
   // TX = ESP32 reads FROM M5 (M5 transmits)
   trainTxChar = svc->getCharacteristic(uartTxCharUUID);
-  
-  if (!trainRxChar || !trainTxChar) { 
-    Serial.println("BLE characteristics not found"); 
+
+  if (!trainRxChar || !trainTxChar) {
+    Serial.println("BLE characteristics not found");
     bleClient->disconnect();
-    return false; 
+    return false;
   }
 
   // Register for notifications on the TX characteristic (M5→ESP32)
   trainTxChar->registerForNotify(notifyCallback);
-  
+
   Serial.println("BLE connected to M5 Stack!");
   return true;
 }
 
 bool sendBLE(const char* msg) {
   if (!connectToTrain()) return false;
-  
+
   // Write to RX characteristic (ESP32→M5)
   trainRxChar->writeValue((uint8_t*)msg, strlen(msg));
-  Serial.print("BLE sent: "); Serial.println(msg);
+  Serial.print("BLE sent: ");
+  Serial.println(msg);
   return true;
 }
 
 bool getLastBLEResponse(char* buf, size_t bufsize) {
   if (!bleResponseReady) return false;
   strncpy(buf, lastBleResponse, bufsize);
-  buf[bufsize-1] = '\0';
+  buf[bufsize - 1] = '\0';
   bleResponseReady = false;
   return true;
 }
@@ -138,12 +139,12 @@ void urlEncode(const char* str, char* out, size_t outSize) {
   size_t j = 0;
   for (size_t i = 0; str[i] && j + 4 < outSize; i++) {
     char c = str[i];
-    if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c=='-'||c=='_'||c=='.'||c=='~') {
+    if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~') {
       out[j++] = c;
-    } else if (c==' ') {
+    } else if (c == ' ') {
       out[j++] = '+';
     } else {
-      snprintf(out+j, 4, "%%%02X", (unsigned char)c);
+      snprintf(out + j, 4, "%%%02X", (unsigned char)c);
       j += 3;
     }
   }
@@ -286,7 +287,7 @@ unsigned long lastHeartbeat = 0;
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  
+
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
   int retries = 0;
@@ -296,21 +297,21 @@ void setup() {
     retries++;
   }
   Serial.println();
-  
+
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi failed");
     return;
   }
-  
+
   Serial.print("WiFi connected: ");
   Serial.println(WiFi.localIP());
-  
+
   snprintf(deviceId, sizeof(deviceId), "%s", WiFi.macAddress().c_str());
   Serial.print("Device ID: ");
   Serial.println(deviceId);
-  
+
   registerDevice();
-  
+
   BLEDevice::init("");
 }
 
@@ -320,14 +321,14 @@ void loop() {
     delay(2000);
     return;
   }
-  
+
   unsigned long now = millis();
-  
+
   if (now - lastPoll > 5000) {
     checkMessages();
     lastPoll = now;
   }
-  
+
   if (now - lastHeartbeat > 15000) {
     char encDev[32];
     urlEncode(deviceId, encDev, sizeof(encDev));
