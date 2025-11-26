@@ -64,14 +64,18 @@ void handleCommand(const String& cmd) {
 }
 
 void MoveTrain(int motorPower) {
-  Serial.println("[APP]moving...");
-
+  Serial.print("[APP] MoveTrain called with power: ");
+  Serial.println(motorPower);
 
   LegoHub_SetMotorPower(motorPower);
   delay(1000);
   LegoHub_SetMotorPower(0);
-  BleUart_Send("ACK: moved");
-
+  
+  String response = "ACK:MOVED:" + String(motorPower);
+  Serial.print("[APP] Sending BLE response: ");
+  Serial.println(response);
+  
+  BleUart_Send(response);
 }
 
 
