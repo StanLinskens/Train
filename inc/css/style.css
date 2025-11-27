@@ -18,6 +18,7 @@ body {
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.45;
     min-height: 100vh;
+    
 }
 
 .skip-link {
@@ -70,10 +71,11 @@ nav {
     display: flex;
     gap: 1rem;
     align-items: center;
+    
 }
 
 .nav-links a {
-    color: #fff;
+    color: #FFD500;
     text-decoration: none;
     font-weight: 600;
     transition: color 0.25s ease, transform 0.2s ease;
@@ -391,4 +393,12 @@ footer {
     padding: 1rem;
     background: var(--primary-color);
     color: #fff;
+}
+
+.info-bar{
+    background-color: var(--accent-color);
+    color: var(--secondary-color);
+    text-align: center;
+    width: 12%;
+    min-height: 100%;
 }

@@ -2,11 +2,11 @@
 
 :root {
   /* Red theme */
-  --primary-color: #d32f2f; /* red 700 */
-  --secondary-color: #b71c1c; /* red 900 */
-  --accent-color: #ff8a80; /* light red */
-  --background-color: #fff7f7; /* very light red/pink tint */
-  --text-color: #2b2b2b;
+  --primary-color: #C91A09; /* red 700 */
+  --secondary-color: #1B1B1B; /* red 900 */
+  --accent-color: #FFD500; /* light red */
+  --background-color: #A7A9AC; /* very light red/pink tint */
+  --text-color: #0055BF;
   /* Use Poppins from Google Fonts (fallback stack included) */
   --font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }

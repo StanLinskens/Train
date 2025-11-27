@@ -1,0 +1,319 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+        :root {
+            --primary-color: #C91A09;
+            --accent-color: #FFD500;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        /* Header */
+        header {
+            background: var(--primary-color);
+            color: #fff;
+            padding: 1rem 0.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #FFD500;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.25s ease, transform 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .info-bar {
+            width: 12%;
+            background-color: #FFD500;
+            padding: 1.5rem 1rem;
+        }
+
+        .info-bar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #003DA5;
+        }
+
+        .info-bar p {
+            font-size: 0.9rem;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .layout-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background-color: #0055BF;
+        }
+
+        .track-container {
+            width: 100%;
+            max-width: 100%;
+            height: 600px;
+            position: relative;
+            left: 70px;
+        }
+
+        /* SVG Tracks */
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .track {
+            stroke: #000;
+            stroke-width: 3;
+            fill: none;
+        }
+
+        .track-thick {
+            stroke: #000;
+            stroke-width: 4;
+            fill: none;
+        }
+
+        .diagonal {
+            stroke: #000;
+            stroke-width: 2.5;
+            fill: none;
+        }
+
+        .track-container {
+    position: relative;
+}
+
+.station_1 {
+    position: absolute;
+    top: 50px;   /* adjust to match the line's Y coordinate */
+    left: 380px;  /* adjust to match the line's X coordinate */
+    z-index: 10;
+    border-radius: 20px;
+    height: 50px;
+    background-color: #1B1B1B;;
+    color: #fff;
+    border-color: rgb(189, 180, 180);
+}
+
+.station_2 {
+    position: absolute;
+    top: 125px;   /* adjust to match the line's Y coordinate */
+    left: 0px;  /* adjust to match the line's X coordinate */
+    z-index: 10;
+    border-radius: 20px;
+    height: 50px;
+    background-color: #C91A09;
+    color: #fff;
+}
+
+.station_3 {
+    position: absolute;
+    top: 125px;   /* adjust to match the line's Y coordinate */
+    left: 1150px;  /* adjust to match the line's X coordinate */
+    z-index: 10;
+    border-radius: 20px;
+    height: 50px;
+    background-color: #C91A09;
+    color: #fff;
+}
+
+.station_4{
+    position: absolute;
+    top: 425px;   /* adjust to match the line's Y coordinate */
+    left: 50px;  /* adjust to match the line's X coordinate */
+    z-index: 10;
+    border-radius: 20px;
+    height: 50px;
+    background-color: #C91A09;
+    color: #fff;
+}
+
+.station_5{
+    position: absolute;
+    top: 425px;   /* adjust to match the line's Y coordinate */
+    left: 1000px;  /* adjust to match the line's X coordinate */
+    z-index: 10;
+    border-radius: 20px;
+    height: 50px;
+    background-color: #C91A09;
+    color: #fff;
+}
+
+#trainIcon {
+    position: absolute;
+    top: 100px;   /* adjust to match the line's Y coordinate */
+    left: 50px;  /* adjust to match the line's X coordinate */
+    z-index: 15;
+    width: 100px;
+    height: auto;
+}
+
+#switch_light {
+    position: absolute;
+    top: 90px;   /* adjust to match the line's Y coordinate */
+    left: 250px;
+    z-index: 10;
+    width: 60px;
+    height: 150px;
+}
+
+#switch_light_2 {
+    position: absolute;
+    top: 90px;   /* adjust to match the line's Y coordinate */
+    left: 180px;  /* adjust to match the line's X coordinate */
+    z-index: 10;
+    width: 60px;
+    height: 150px;
+}
+
+#switch_light_3 {
+    position: absolute;
+    top: 90px;   /* adjust to match the line's Y coordinate */
+    left: 980px;  /* adjust to match the line's X coordinate */
+    z-index: 10;
+    width: 60px;
+    height: 150px;
+}
+
+#switch_light_4 {
+    position: absolute;
+    top: 240px; 
+    left: 830px;
+    z-index: 10;
+    width: 60px;
+    height: 150px;
+}
+
+#switch_light_5 {
+    position: absolute; 
+    top: 390px;   /* adjust to match the line's Y coordinate */
+    left: 630px;
+    z-index: 10;
+    width: 60px;
+    height: 150px;
+}
+
+.line_1{
+    position: absolute;
+    top: 15px;
+    left: 13px;
+    background-color: black;
+    height: 1px;
+    width: 5px;
+    rotate: -30deg;
+
+}
+
+.line_2{
+
+    position: absolute;
+    top: 35px;
+    left: 13px;
+    background-color: black;
+    height: 1px;
+    width: 5px;
+    rotate: 1deg;
+
+}
+
+.line_3{
+    position: absolute;
+    top: 15px;
+    left: 13px;
+    background-color: black;
+    height: 1px;
+    width: 5px;
+    rotate: 40deg;
+
+}
+
+
+.black_board {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30px;
+    height: 50px;
+    background-color: black;
+    border: 2px solid #000;
+    border-radius: 40px;
+    border-color: white;
+    border-width: 2px;
+}
+
+.red_light {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border: 1px solid #801818;
+    border-radius: 50%;
+}
+
+.green_light {
+    position: absolute;
+    top: 30px;
+    left: 10px;
+    width: 10px;
+    height: 10px;
+    background-color: green;
+    border: 1px solid #0e510e;
+    border-radius: 50%;
+}
+
+.pole {
+    position: absolute;
+    top: 50px;
+    left: 14px;
+    width: 3px;
+    height: 8px;
+    background-color: gray;
+}
+
