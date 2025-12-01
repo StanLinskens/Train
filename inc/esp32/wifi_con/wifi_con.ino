@@ -13,7 +13,7 @@ const char* serverUrl = "http://stan.1pc.nl/Train/inc/php/data.php";
 // Define peer MAC address (replace with your ESP32 B MAC address)
 uint8_t peerAddress[] = { 0xF4, 0x65, 0x0B, 0x33, 0x79, 0xF2 };
 
-const String deviceName = "";
+const String deviceName;
 
 // Struct to send messages via ESP-NOW
 typedef struct struct_message {
@@ -27,6 +27,13 @@ struct_message incomingMessage;
 String getDeviceName() {
   uint8_t mac[6];
   WiFi.macAddress(mac);  // get device MAC
+    Serial.print("MAC Address: ");
+  for (int i = 0; i < 6; i++) {
+    if (mac[i] < 16) Serial.print("0"); // Leading zero for single-digit hex
+    Serial.print(mac[i], HEX);
+    if (i < 5) Serial.print(":");
+  }
+  Serial.println();
   char name[20];
   snprintf(name, sizeof(name), "ESP32_%02X%02X%02X", mac[3], mac[4], mac[5]);
   return String(name);
