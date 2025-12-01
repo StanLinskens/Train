@@ -10,3 +10,5 @@ function get_switch_status($switch_name) {
     return isset($switches[$switch_name]) ? $switches[$switch_name] : null;  
 }
 
+
+

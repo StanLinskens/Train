@@ -27,7 +27,12 @@
 
             <button class="switch"> switch test</button>
 
-            Train is at:
+            is at:
+
+            <!-- ⭐ ADDED LINE BELOW ⭐ -->
+            <p id="pressedInfo">No button pressed yet</p>
+            <!-- ⭐ END OF ADDED LINE ⭐ -->
+
         </div>
 
         <div class="layout-area">
@@ -36,18 +41,11 @@
               
                 <svg width="1200" height="600" xmlns="http://www.w3.org/2000/svg">
                   <line x1="50" y1="150" x2="1150" y2="150" class="track-thick" />
-
                   <line x1="100" y1="450" x2="1000" y2="450" class="track-thick" />
-
                   <line x1="200" y1="150" x2="350" y2="300" class="track" />
-
                   <line x1="350" y1="300" x2="850" y2="300" class="track" />
-
                   <line x1="850" y1="300" x2="1000" y2="150" class="track" />
-
-                  <!-- Top left diagonal moved slightly to the right -->
                   <line x1="270" y1="150" x2="390" y2="80" class="diagonal" />
-
                   <line x1="850" y1="300" x2="650" y2="450" class="diagonal" /> 
                 </svg>
 
@@ -56,10 +54,6 @@
                 <button class="station_3" id="station3">Station 3</button>
                 <button class="station_4" id="station4">Station 4</button>
                 <button class="station_5" id="station5">Station 5</button>
-
-
-                
-
 
                 <div id="switch_light">
                   <div class="black_board"></div>
@@ -106,7 +100,10 @@
                   <div class="line_2"> </div>
                 </div>
 
-                
+                <div id="moving">
+                  <button class="forward"></button>
+                  <div class="backward"></div>
+                </div>
 
             </div>
         </div>
@@ -114,10 +111,6 @@
     
 
   <script src="train.js"></script>
-
-  
-
-
 
 </body>
 </html>

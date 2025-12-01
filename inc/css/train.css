@@ -317,3 +317,32 @@
     background-color: gray;
 }
 
+.forward {
+    position: absolute;
+    top: 500px;
+    left: 570px;
+    border-left: 50px solid transparent;
+  border-right: 50px solid transparent;
+  border-bottom: 100px solid #ffffff; /* color of pyramid */
+    z-index: 20;
+    rotate: 90deg;
+    
+}
+
+.forward:hover {
+  border-bottom-color: #f0f0f0;
+  transform: translateY(-5px); /* small lift on hover */
+  transition: all 0.2s ease;
+}
+
+.backward {
+    position: absolute;
+    top: 500px;
+    left: 400px;
+    border-left: 50px solid transparent;
+  border-right: 50px solid transparent;
+  border-top: 100px solid #ffffff; /* color of pyramid */
+    z-index: 20;
+    rotate: 90deg;
+    
+}
