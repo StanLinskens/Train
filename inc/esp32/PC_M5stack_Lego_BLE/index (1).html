@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>M5Stack Core2 BLE UART Debug Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+    }
+
+    #status {
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      background: #eee;
+    }
+
+    #log {
+      border: 1px solid #ccc;
+      height: 260px;
+      padding: 0.5rem;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+      background: #f9f9f9;
+    }
+
+    #debugInfo {
+      font-size: 0.9rem;
+      color: #555;
+      margin-top: 1rem;
+      border-top: 1px solid #ccc;
+      padding-top: 0.5rem;
+    }
+
+    button {
+      margin-top: 0.3rem;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>M5Stack Core2 BLE UART Debug Demo</h1>
+
+  <div id="status">Status: page loaded, not connected.</div>
+
+  <button id="connectBtn">Connect to BLE device</button>
+  <select id="deviceSelect" style="margin-left:0.5rem;">
+    <option value="">-- no device selected --</option>
+  </select>
+
+  <div style="margin-top: 1rem;">
+    <input id="textInput" type="text" placeholder="Type message..." size="40" />
+    <button id="sendBtn" disabled>Send</button>
+  </div>
+
+  <h3>Log</h3>
+  <div id="log"></div>
+
+  <div id="debugInfo">
+    <strong>Debug info:</strong><br />
+    <span id="webBtSupport"></span><br />
+    <span id="protoInfo"></span><br />
+    <span id="uaInfo"></span><br />
+  </div>
+
+  <script>
+    // Nordic UART Service (NUS) UUIDs used by M5 BLE UART (see M5 docs)
+    // These identify the BLE service and its RX/TX characteristics.
+    // RX: write from host -> device. TX: notifications from device -> host.
+    // Reference: https://uiflow-micropython.readthedocs.io/en/2.1.4/system/bleuart.html
+    const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+    const NUS_RX_CHAR_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'; // host writes to this (M5 receives)
+    const NUS_TX_CHAR_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // device notifies on this (M5 sends)
+
+  // Devices map: keep multiple devices and their characteristics keyed by device.id
+  // Each entry: { device, gattServer, nusRxChar, nusTxChar }
+  const devices = new Map();
+
+    const logEl = document.getElementById('log');
+    const statusEl = document.getElementById('status');
+    const connectBtn = document.getElementById('connectBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const textInput = document.getElementById('textInput');
+    const webBtSupportEl = document.getElementById('webBtSupport');
+    const protoInfoEl = document.getElementById('protoInfo');
+    const uaInfoEl = document.getElementById('uaInfo');
+
+    // Simple logger: writes timestamped lines both to the console and the `#log` element
+    function log(msg) {
+      const time = new Date().toLocaleTimeString();
+      const line = `[${time}] ${msg}`;
+      console.log(line);
+      logEl.textContent += line + '\n';
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    // Update the visual status line and mirror it to the console
+    function setStatus(msg) {
+      statusEl.textContent = 'Status: ' + msg;
+      console.log('STATUS:', msg);
+    }
+
+    // Init debug info
+    // Immediately show some debug info about the environment and support
+    (function initDebugInfo() {
+      const hasWebBt = 'bluetooth' in navigator;
+      webBtSupportEl.textContent =
+        'Web Bluetooth support: ' + (hasWebBt ? 'YES' : 'NO');
+      protoInfoEl.textContent =
+        'Location protocol: ' +
+        window.location.protocol +
+        ' (needs https: or http://localhost)';
+      uaInfoEl.textContent = 'UserAgent: ' + navigator.userAgent;
+
+      if (!hasWebBt) {
+        // Web Bluetooth is required for this demo
+        setStatus('Web Bluetooth NOT supported in this browser.');
+        log(
+          'ERROR: navigator.bluetooth is not available. Try Chrome/Edge op https of http://localhost'
+        );
+      } else {
+        setStatus('Web Bluetooth supported. Not connected.');
+      }
+    })();
+
+    // Main connect flow: request device, connect GATT, discover NUS service/characteristics,
+    // start notifications and enable sending.
+    async function connect() {
+      if (!('bluetooth' in navigator)) {
+        setStatus('Web Bluetooth NOT supported.');
+        log('navigator.bluetooth is missing. Aborting connect().');
+        return;
+      }
+
+      try {
+        // Ask user to pick a device. `acceptAllDevices: true` is convenient for demos
+        // but you can narrow this down by using filters for known names or services.
+        log('Requesting Bluetooth device (acceptAllDevices: true)...');
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [
+            { namePrefix: 'm5' },
+            { namePrefix: 'M5' }  // matches "M5Stack", "M5Core2", etc.
+          ],
+          acceptAllDevices: false,
+          // We include the NUS service in optionalServices so we can access it later
+          optionalServices: [NUS_SERVICE_UUID],
+        });
+
+        log(`Device selected: name=${device.name}, id=${device.id}`);
+
+        // Register disconnect handler which will remove the device from our map
+        device.addEventListener('gattserverdisconnected', async () => {
+          setStatus('Disconnected from device ' + (device.name || device.id));
+          log('Device disconnected: ' + device.id);
+          devices.delete(device.id);
+          populateDeviceSelect();
+        });
+
+        setStatus('Connecting GATT server to ' + (device.name || device.id) + '...');
+        const gattServer = await device.gatt.connect();
+        log('GATT server connected.');
+
+        // ---- DEBUG: enumerate services & characteristics for troubleshooting ----
+        // This helps when devices don't advertise the expected UUIDs.
+        try {
+          log('Enumerating primary services & characteristics...');
+          const services = await gattServer.getPrimaryServices();
+          for (const service of services) {
+            log(` Service: ${service.uuid}`);
+            const chars = await service.getCharacteristics();
+            for (const c of chars) {
+              const props = Object.keys(c.properties)
+                .filter((p) => c.properties[p])
+                .join(',');
+              log(`   Characteristic: ${c.uuid} (props: ${props})`);
+            }
+          }
+          log('Service/characteristic enumeration complete.');
+        } catch (e) {
+          // Enumeration can fail on some platforms or device implementations; not fatal.
+          log('WARNING: could not enumerate services/characteristics: ' + e);
+        }
+
+        // Get the NUS service and its RX/TX characteristics.
+        // - We write to RX to send data to the M5 device.
+        // - We subscribe to TX notifications to receive data from the M5 device.
+        log('Getting NUS service ' + NUS_SERVICE_UUID + ' ...');
+        const nusService = await gattServer.getPrimaryService(NUS_SERVICE_UUID);
+        log('NUS service obtained.');
+
+        log('Getting RX characteristic ' + NUS_RX_CHAR_UUID + ' ...');
+  const nusRxChar = await nusService.getCharacteristic(NUS_RX_CHAR_UUID);
+  log('RX characteristic obtained.');
+
+  log('Getting TX characteristic ' + NUS_TX_CHAR_UUID + ' ...');
+  const nusTxChar = await nusService.getCharacteristic(NUS_TX_CHAR_UUID);
+  log('TX characteristic obtained.');
+
+        // Start listening for notifications from the device (TX char)
+        log('Starting notifications on TX characteristic...');
+        await nusTxChar.startNotifications();
+        nusTxChar.addEventListener('characteristicvaluechanged', (event) => {
+          // `event.target.value` is a DataView; decode it into a string
+          const value = event.target.value;
+          const text = new TextDecoder().decode(value);
+          // Use JSON.stringify to make control characters visible in the log
+          log(`From ${device.id} (${device.name}): ` + JSON.stringify(text));
+        });
+
+        // Store the connected device and its characteristics so we can talk to multiple devices
+        devices.set(device.id, {
+          device,
+          gattServer,
+          nusRxChar,
+          nusTxChar,
+        });
+        populateDeviceSelect();
+        log('Notifications started.');
+
+        sendBtn.disabled = false;
+        setStatus(
+          'Connected to ' + (device.name || '(no name)') + '. Ready to send/receive.'
+        );
+        log('Connection complete. You can now send data.');
+      } catch (err) {
+        console.error('Connect error:', err);
+        setStatus('Error during connect. See log.');
+        log(
+          'ERROR in connect(): ' +
+          (err && err.message ? err.message : JSON.stringify(err))
+        );
+      }
+    }
+
+    // Send the given message to the device with the specified deviceId.
+    // If deviceId is omitted, falls back to the currently selected device in the UI.
+    async function sendToDevice(message, deviceId) {
+      const id = deviceId || deviceSelect.value;
+      if (!id) {
+        log('No device selected to send to.');
+        setStatus('No device selected.');
+        return;
+      }
+
+      const entry = devices.get(id);
+      if (!entry || !entry.nusRxChar) {
+        log('Device not connected or missing RX characteristic: ' + id);
+        setStatus('Device not connected.');
+        return;
+      }
+
+      if (!message) {
+        log('Nothing to send (message empty).');
+        return;
+      }
+
+      try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(String(message));
+        log(`Writing to RX characteristic of ${id}: ` + JSON.stringify(message));
+        await entry.nusRxChar.writeValue(data);
+        log(`To ${id}: ` + JSON.stringify(message));
+      } catch (err) {
+        console.error('Send error:', err);
+        setStatus('Error during send. See log.');
+        log(
+          'ERROR in sendToDevice(): ' +
+          (err && err.message ? err.message : JSON.stringify(err))
+        );
+      }
+    }
+
+    // Convenience wrapper used by the UI send button: sends the text input to the selected device
+    async function send() {
+      await sendToDevice(textInput.value);
+    }
+
+    connectBtn.addEventListener('click', () => {
+      log('--- Connect button clicked ---');
+      connect();
+    });
+
+    sendBtn.addEventListener('click', () => {
+      log('--- Send button clicked ---');
+      send();
+    });
+
+    textInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        log('--- Enter pressed in text input ---');
+        send();
+      }
+    });
+
+    // Populate the device select element from the `devices` map
+    const deviceSelect = document.getElementById('deviceSelect');
+    function populateDeviceSelect() {
+      const selected = deviceSelect.value;
+      deviceSelect.innerHTML = '<option value="">-- no device selected --</option>';
+      for (const [id, entry] of devices.entries()) {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = `${entry.device.name || '(no name)'} — ${id}`;
+        deviceSelect.appendChild(opt);
+      }
+      // try to restore previous selection if still present
+      if (selected) deviceSelect.value = selected;
+    }
+
+    // Expose the sendToDevice function globally so other scripts or console calls can use it
+    window.sendToDevice = sendToDevice;
+  </script>
+</body>
+
+</html>
