@@ -21,13 +21,75 @@
 
     <div class="container">
         <div class="info-bar">
-            <h2>Train Page</h2>
-            <p>This page displays train-related data and information.</p>
-            <br><br><br>
+            <h2>Train Control</h2>
+            <p>Real-time train automation system with multi-device BLE control</p>
 
-            <button class="switch"> switch test</button>
+            <!-- Device Connection Section -->
+            <div class="info-section">
+                <h3>🔌 Devices</h3>
+                <button id="connectTrainBtn" class="device-btn">Connect Train</button>
+                <div class="device-status">
+                    <span class="status-dot disconnected" id="trainDot"></span>
+                    <span class="status-text disconnected" id="trainStatusText">Disconnected</span>
+                </div>
+                <div id="trainDeviceInfo" style="font-size: 0.75rem; color: #999; margin-top: 0.3rem;"></div>
 
-            Train is at:
+                <button id="connectSwitchBtn" class="device-btn" style="margin-top: 0.8rem;">Connect Switches</button>
+                <div class="device-status">
+                    <span class="status-dot disconnected" id="switchDot"></span>
+                    <span class="status-text disconnected" id="switchStatusText">Disconnected</span>
+                </div>
+                <div id="switchDeviceInfo" style="font-size: 0.75rem; color: #999; margin-top: 0.3rem;"></div>
+            </div>
+
+            <!-- Switch State Indicators -->
+            <div class="info-section">
+                <h3>🔀 Switch States</h3>
+                <div class="switch-indicators">
+                    <div class="switch-indicator off" id="switchInd1">
+                        S1 <span class="switch-state"></span>
+                    </div>
+                    <div class="switch-indicator off" id="switchInd2">
+                        S2 <span class="switch-state"></span>
+                    </div>
+                    <div class="switch-indicator off" id="switchInd3">
+                        S3 <span class="switch-state"></span>
+                    </div>
+                    <div class="switch-indicator off" id="switchInd4">
+                        S4 <span class="switch-state"></span>
+                    </div>
+                    <div class="switch-indicator off" id="switchInd5">
+                        S5 <span class="switch-state"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timer Configuration Section -->
+            <div class="info-section">
+                <h3>⏱️ Timers (ms)</h3>
+                <div class="timer-section">
+                  <div class="timer-row"><label>1→2:</label> <input type="number" class="timer-input" data-from="1" data-to="2" value="2000" min="500" step="100"></div>
+                  <div class="timer-row"><label>1→3:</label> <input type="number" class="timer-input" data-from="1" data-to="3" value="2000" min="500" step="100"></div>
+                  <div class="timer-row"><label>2→1:</label> <input type="number" class="timer-input" data-from="2" data-to="1" value="2000" min="500" step="100"></div>
+                  <div class="timer-row"><label>2→3:</label> <input type="number" class="timer-input" data-from="2" data-to="3" value="2000" min="500" step="100"></div>
+                  <div class="timer-row"><label>2→4:</label> <input type="number" class="timer-input" data-from="2" data-to="4" value="2000" min="500" step="100"></div>
+                  <div class="timer-row"><label>3→1:</label> <input type="number" class="timer-input" data-from="3" data-to="1" value="2000" min="500" step="100"></div>
+                  <div class="timer-row"><label>3→2:</label> <input type="number" class="timer-input" data-from="3" data-to="2" value="2000" min="500" step="100"></div>
+                  <div class="timer-row"><label>3→5:</label> <input type="number" class="timer-input" data-from="3" data-to="5" value="2000" min="500" step="100"></div>
+                  <div class="timer-row"><label>4→2:</label> <input type="number" class="timer-input" data-from="4" data-to="2" value="2000" min="500" step="100"></div>
+                  <div class="timer-row"><label>4→5:</label> <input type="number" class="timer-input" data-from="4" data-to="5" value="2000" min="500" step="100"></div>
+                  <div class="timer-row"><label>5→3:</label> <input type="number" class="timer-input" data-from="5" data-to="3" value="2000" min="500" step="100"></div>
+                  <div class="timer-row"><label>5→4:</label> <input type="number" class="timer-input" data-from="5" data-to="4" value="2000" min="500" step="100"></div>
+                </div>
+            </div>
+
+            <button class="switch">Test Lights</button>
+
+            <div class="station-display">
+              <div class="station-label">Current Station</div>
+              <div class="station-number" id="stationNumber">2</div>
+              <div class="station-status" id="stationStatusText">Ready to depart</div>
+            </div>
         </div>
 
         <div class="layout-area">
