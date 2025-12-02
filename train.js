@@ -32,11 +32,11 @@ const stationCoordinates = {
 // Based on the track SVG layout with switches
 const stationConnectivity = {
   1: { reachable: [2],     switches: ['lols5p0'] },
-  2: { reachable: [1, 3, 6],  switches: ['lols2p0', 'lols3p1'] },
-  3: { reachable: [2, 4, 6],  switches: ['lols3p1', 'lols4p0'] },
+  2: { reachable: [1, 3, 6],  switches: ['lols1p0', 'lols2p0', 'lols3p1'] },
+  3: { reachable: [2, 4, 6],  switches: ['lolsp0', 'lols3p1', 'lols4p0'] },
   4: { reachable: [3, 5],  switches: ['lols2p0', 'lols3p0', 'lols4p1'] },
   5: { reachable: [4],     switches: ['lols4p1'] },
-  6: { reachable: [2, 3],     switches: ['lols2p1', 'lols3p0'] }
+  6: { reachable: [2, 3],     switches: ['lols1p1', 'lols2p1', 'lols3p0'] }
 };
 
 // Current train state
