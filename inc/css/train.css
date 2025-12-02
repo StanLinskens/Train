@@ -406,7 +406,7 @@ svg {
 }
 
 /* ============ STATION BUTTONS ============ */
-.station_1, .station_2, .station_3, .station_4, .station_5 {
+.station_1, .station_2, .station_3, .station_4, .station_5, .station_6 {
     position: absolute;
     width: auto;
     padding: 0.8rem 1.2rem;
@@ -430,7 +430,9 @@ svg {
 .station_2.current-station,
 .station_3.current-station, 
 .station_4.current-station, 
-.station_5.current-station {
+.station_5.current-station,
+.station_6.current-station
+ {
     background: linear-gradient(135deg, #FFD500, #e6b800) !important;
     color: #1f1f1f !important;
     border-color: #ffb700 !important;
@@ -441,7 +443,8 @@ svg {
 .station_1:hover:not(:disabled),
 .station_3:hover:not(:disabled),
 .station_4:hover:not(:disabled),
-.station_5:hover:not(:disabled) {
+.station_5:hover:not(:disabled),
+.station_6:hover:not(:disabled) {
     transform: scale(1.08);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
@@ -455,7 +458,8 @@ svg {
 .station_2:disabled,
 .station_3:disabled,
 .station_4:disabled,
-.station_5:disabled {
+.station_5:disabled,
+.station_6:disabled {
     opacity: 0.3;
     cursor: not-allowed;
 }
@@ -470,6 +474,13 @@ svg {
     left: 0px;
 }
 
+/* Extra station on the unused/extra track */
+.station_6 {
+    top: 275px;
+    left: 520px;
+    background: linear-gradient(135deg, var(--primary-color), #a01508);
+}
+
 .station_3 {
     top: 125px;
     left: 1150px;
@@ -477,6 +488,7 @@ svg {
 
 .station_4 {
     top: 425px;
+    left: 1195px;
     left: 50px;
 }
 

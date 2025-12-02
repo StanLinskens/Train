@@ -18,23 +18,25 @@ const switchStates = {
   5: false
 };
 
-// Station coordinates for train animation
+// Station coordinates for train animation (match CSS button positions)
 const stationCoordinates = {
   1: { x: 420, y: 95 },
   2: { x: 95, y: 175 },
   3: { x: 1195, y: 175 },
   4: { x: 120, y: 475 },
-  5: { x: 1050, y: 475 }
+  5: { x: 1050, y: 475 },
+  6: { x: 520, y: 275 }  // Station 6 on middle track
 };
 
 // Track layout connectivity: which stations can be reached directly from each station
 // Based on the track SVG layout with switches
 const stationConnectivity = {
-  1: { reachable: [2],     switches: ['lols1p0'],                      command: 'M30',  timer: 2000 },
-  2: { reachable: [1, 3],  switches: ['lols1p0', 'lols4p1'],          command: 'M30',  timer: 2000 },
-  3: { reachable: [2, 4],  switches: ['lols1p1', 'lols4p0'],          command: 'M-30', timer: 2000 },
-  4: { reachable: [3, 5],     switches: ['lols1p0', 'lols4p1'],          command: 'M-30', timer: 2000 },
-  5: { reachable: [4],     switches: ['lols1p1', 'lols4p0'],          command: 'M30',  timer: 2000 }
+  1: { reachable: [2],     switches: ['lols5p0'] },
+  2: { reachable: [1, 3, 6],  switches: ['lols2p0', 'lols3p1'] },
+  3: { reachable: [2, 4, 6],  switches: ['lols3p1', 'lols4p0'] },
+  4: { reachable: [3, 5],  switches: ['lols2p0', 'lols3p0', 'lols4p1'] },
+  5: { reachable: [4],     switches: ['lols4p1'] },
+  6: { reachable: [2, 3],     switches: ['lols2p1', 'lols3p0'] }
 };
 
 // Current train state
@@ -73,6 +75,27 @@ function updateTrainPosition(stationId) {
   trainIcon.style.top = coords.y + 'px';
 }
 
+// Determine train direction based on from/to coordinates
+function getTrainDirection(fromStation, toStation) {
+  const from = stationCoordinates[fromStation];
+  const to = stationCoordinates[toStation];
+  
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  
+  // Determine primary direction based on which coordinate changes more
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+  
+  if (absDx > absDy) {
+    // Horizontal movement dominates
+    return dx > 0 ? 'M50' : 'M-50';  // M40 = right, M-40 = left
+  } else {
+    // Vertical movement dominates
+    return dy > 0 ? 'M50' : 'M-50';  // M40 = down, M-40 = up
+  }
+}
+
 // Animate train movement between stations
 async function animateTrainMovement(fromStation, toStation) {
   const trainIcon = document.getElementById('trainIcon');
@@ -108,7 +131,7 @@ async function animateTrainMovement(fromStation, toStation) {
 
 // Highlight current station button
 function highlightCurrentStation() {
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 6; i++) {
     const btn = document.getElementById(`station${i}`);
     if (btn) {
       if (i === currentStation) {
@@ -272,48 +295,72 @@ function updateDeviceStatus() {
 
 // Update station button states: enable reachable stations, disable others
 function updateStationButtons() {
-  const reachable = stationConnectivity[currentStation].reachable;
-  
-  for (let i = 1; i <= 5; i++) {
+  // Allow clicking any station (except the current one). Reachability is handled by pathfinding.
+  for (let i = 1; i <= 6; i++) {
     const btn = document.getElementById(`station${i}`);
     if (!btn) continue;
 
-    if (i === currentStation || isMoving) {
-      // Disable current station and all during movement
+    if (i === currentStation) {
+      // Disable current station so user can't 'move' to where it already is
       btn.disabled = true;
       btn.style.opacity = '0.5';
       btn.style.cursor = 'not-allowed';
-    } else if (reachable.includes(i)) {
-      // Enable reachable stations
+    } else {
+      // Enable all other stations
       btn.disabled = false;
       btn.style.opacity = '1';
       btn.style.cursor = 'pointer';
-    } else {
-      // Disable unreachable stations
-      btn.disabled = true;
-      btn.style.opacity = '0.3';
-      btn.style.cursor = 'not-allowed';
     }
   }
 }
 
+// Find shortest path (BFS) between stations using stationConnectivity reachable lists
+function findPath(from, to) {
+  if (from === to) return [from];
+  const queue = [from];
+  const visited = new Set([from]);
+  const parent = {};
+
+  while (queue.length > 0) {
+    const cur = queue.shift();
+    const neighbors = (stationConnectivity[cur] && stationConnectivity[cur].reachable) || [];
+    for (const n of neighbors) {
+      if (!visited.has(n)) {
+        visited.add(n);
+        parent[n] = cur;
+        if (n === to) {
+          // build path
+          const path = [to];
+          let p = to;
+          while (p !== from) {
+            p = parent[p];
+            path.unshift(p);
+          }
+          return path;
+        }
+        queue.push(n);
+      }
+    }
+  }
+  return null; // no path
+}
+
 // Execute a station's automation sequence
 async function executeStation(targetStation) {
-  // Check if train is already moving
+  // If already moving, don't start another full route
   if (isMoving) {
     console.log('Train is already moving. Wait for it to arrive first.');
     return;
   }
 
-  // Check if target is reachable from current station
-  const reachable = stationConnectivity[currentStation].reachable;
-  if (!reachable.includes(targetStation)) {
-    console.log(`Station ${targetStation} not reachable from station ${currentStation}`);
-    console.log(`Reachable stations: ${reachable.join(', ')}`);
+  // Compute path (may include intermediate stops)
+  const path = findPath(currentStation, targetStation);
+  if (!path) {
+    console.log(`No path found from ${currentStation} to ${targetStation}`);
     return;
   }
 
-  console.log(`Moving train from station ${currentStation} to station ${targetStation}...`);
+  console.log(`Path found: ${path.join(' -> ')}`);
   isMoving = true;
   updateStationButtons();
 
@@ -323,33 +370,51 @@ async function executeStation(targetStation) {
     activeTimeout = null;
   }
 
-  const config = stationConnectivity[targetStation];
-  const timer = getTimer(currentStation, targetStation); // Get custom timer for this route
+  // Execute each leg in the path (skip the first element since it's currentStation)
+  for (let idx = 1; idx < path.length; idx++) {
+    const from = path[idx - 1];
+    const to = path[idx];
+    console.log(`Moving from ${from} to ${to}...`);
 
-  // Send all switch commands to configure the path
-  for (const switchCmd of config.switches) {
-    await sendCommand('switch', switchCmd);
-    await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between commands
+    const config = stationConnectivity[to] || {};
+    const switches = config.switches || [];
+    const timer = getTimer(from, to);
+    
+    // Dynamically determine direction based on next station coordinates
+    const direction = getTrainDirection(from, to);
+
+    // Send switch configuration for this leg
+    for (const switchCmd of switches) {
+      await sendCommand('switch', switchCmd);
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // Animate this leg
+    await animateTrainMovement(from, to);
+
+    // Send train movement command for this leg with dynamic direction
+    await sendCommand('train', direction);
+
+    console.log(`Leg moving for ${timer}ms to reach station ${to}`);
+
+    // Wait for timer, then STOP and mark arrival
+    await new Promise(resolve => {
+      activeTimeout = setTimeout(async () => {
+        await sendCommand('train', 'STOP');
+        currentStation = to;
+        updateStationDisplay();
+        highlightCurrentStation();
+        updateStationButtons();
+        activeTimeout = null;
+        resolve();
+      }, timer);
+    });
   }
 
-  // Animate train movement
-  await animateTrainMovement(currentStation, targetStation);
-
-  // Send train movement command
-  await sendCommand('train', config.command);
-  console.log(`Train moving for ${timer}ms to reach station ${targetStation}`);
-
-  // Schedule STOP command and position update after timer
-  activeTimeout = setTimeout(async () => {
-    console.log(`Train arrived at station ${targetStation}`);
-    await sendCommand('train', 'STOP');
-    currentStation = targetStation;
-    isMoving = false;
-    updateStationDisplay();
-    updateStationButtons();
-    highlightCurrentStation();
-    activeTimeout = null;
-  }, timer);
+  // Completed full path
+  isMoving = false;
+  updateStationButtons();
+  console.log(`Arrived at destination ${currentStation}`);
 }
 
 // Update UI to reflect current station
@@ -395,8 +460,8 @@ document.addEventListener('DOMContentLoaded', () => {
     connectDevice('switch');
   });
 
-  // Station button listeners - execute automation when clicked
-  for (let i = 1; i <= 5; i++) {
+  // Station button listeners - execute automation when clicked (now supports station 6)
+  for (let i = 1; i <= 6; i++) {
     const stationBtn = document.getElementById(`station${i}`);
     if (stationBtn) {
       stationBtn.addEventListener('click', () => {
@@ -405,6 +470,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     }
+  }
+
+  // Allow toggling individual switches by clicking the small .switch-state dot
+  for (let i = 1; i <= 5; i++) {
+    const indicator = document.getElementById(`switchInd${i}`);
+    if (!indicator) continue;
+    const dot = indicator.querySelector('.switch-state');
+    if (!dot) continue;
+    dot.style.cursor = 'pointer';
+    dot.title = `Toggle switch ${i}`;
+    dot.addEventListener('click', async (e) => {
+      // toggle local state and update visual
+      const newState = !switchStates[i];
+      updateSwitchIndicator(i, newState);
+      // send command to switch device (best-effort)
+      const cmd = `lols${i}p${newState ? 1 : 0}`;
+      await sendCommand('switch', cmd);
+    });
   }
 
   // Toggle switch lights between red and green (visual test feature)

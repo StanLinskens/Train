@@ -1,185 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timesaver Train Layout</title>
-    <link rel="stylesheet" href="inc/css/train.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timesaver Train Layout</title>
+  <link rel="stylesheet" href="inc/css/train.css">
 </head>
+
 <body>
-    <header>
-        <nav>
-            <div class="logo">Train</div>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="#about">About Project</a></li>
-                <li><a href="#team">Team</a></li>
-                <li><a href="train.html">Train</a></li>
-            </ul>
-        </nav>
-    </header>
+  <header>
+    <nav>
+      <div class="logo">Train</div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="#about">About Project</a></li>
+        <li><a href="#team">Team</a></li>
+        <li><a href="train.html">Train</a></li>
+      </ul>
+    </nav>
+  </header>
 
-    <div class="container">
-        <div class="info-bar">
-            <h2>Train Control</h2>
-            <p>Real-time train automation system with multi-device BLE control</p>
+  <div class="container">
+    <div class="info-bar">
+      <h2>Train Control</h2>
+      <p>Real-time train automation system with multi-device BLE control</p>
 
-            <!-- Device Connection Section -->
-            <div class="info-section">
-                <h3>🔌 Devices</h3>
-                <button id="connectTrainBtn" class="device-btn">Connect Train</button>
-                <div class="device-status">
-                    <span class="status-dot disconnected" id="trainDot"></span>
-                    <span class="status-text disconnected" id="trainStatusText">Disconnected</span>
-                </div>
-                <div id="trainDeviceInfo" style="font-size: 0.75rem; color: #999; margin-top: 0.3rem;"></div>
-
-                <button id="connectSwitchBtn" class="device-btn" style="margin-top: 0.8rem;">Connect Switches</button>
-                <div class="device-status">
-                    <span class="status-dot disconnected" id="switchDot"></span>
-                    <span class="status-text disconnected" id="switchStatusText">Disconnected</span>
-                </div>
-                <div id="switchDeviceInfo" style="font-size: 0.75rem; color: #999; margin-top: 0.3rem;"></div>
-            </div>
-
-            <!-- Switch State Indicators -->
-            <div class="info-section">
-                <h3>🔀 Switch States</h3>
-                <div class="switch-indicators">
-                    <div class="switch-indicator off" id="switchInd1">
-                        S1 <span class="switch-state"></span>
-                    </div>
-                    <div class="switch-indicator off" id="switchInd2">
-                        S2 <span class="switch-state"></span>
-                    </div>
-                    <div class="switch-indicator off" id="switchInd3">
-                        S3 <span class="switch-state"></span>
-                    </div>
-                    <div class="switch-indicator off" id="switchInd4">
-                        S4 <span class="switch-state"></span>
-                    </div>
-                    <div class="switch-indicator off" id="switchInd5">
-                        S5 <span class="switch-state"></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Timer Configuration Section -->
-            <div class="info-section">
-                <h3>⏱️ Timers (ms)</h3>
-                <div class="timer-section">
-                  <div class="timer-row"><label>1→2:</label> <input type="number" class="timer-input" data-from="1" data-to="2" value="2000" min="500" step="100"></div>
-                  <div class="timer-row"><label>1→3:</label> <input type="number" class="timer-input" data-from="1" data-to="3" value="2000" min="500" step="100"></div>
-                  <div class="timer-row"><label>2→1:</label> <input type="number" class="timer-input" data-from="2" data-to="1" value="2000" min="500" step="100"></div>
-                  <div class="timer-row"><label>2→3:</label> <input type="number" class="timer-input" data-from="2" data-to="3" value="2000" min="500" step="100"></div>
-                  <div class="timer-row"><label>2→4:</label> <input type="number" class="timer-input" data-from="2" data-to="4" value="2000" min="500" step="100"></div>
-                  <div class="timer-row"><label>3→1:</label> <input type="number" class="timer-input" data-from="3" data-to="1" value="2000" min="500" step="100"></div>
-                  <div class="timer-row"><label>3→2:</label> <input type="number" class="timer-input" data-from="3" data-to="2" value="2000" min="500" step="100"></div>
-                  <div class="timer-row"><label>3→5:</label> <input type="number" class="timer-input" data-from="3" data-to="5" value="2000" min="500" step="100"></div>
-                  <div class="timer-row"><label>4→2:</label> <input type="number" class="timer-input" data-from="4" data-to="2" value="2000" min="500" step="100"></div>
-                  <div class="timer-row"><label>4→5:</label> <input type="number" class="timer-input" data-from="4" data-to="5" value="2000" min="500" step="100"></div>
-                  <div class="timer-row"><label>5→3:</label> <input type="number" class="timer-input" data-from="5" data-to="3" value="2000" min="500" step="100"></div>
-                  <div class="timer-row"><label>5→4:</label> <input type="number" class="timer-input" data-from="5" data-to="4" value="2000" min="500" step="100"></div>
-                </div>
-            </div>
-
-            <button class="switch">Test Lights</button>
-
-            <div class="station-display">
-              <div class="station-label">Current Station</div>
-              <div class="station-number" id="stationNumber">2</div>
-              <div class="station-status" id="stationStatusText">Ready to depart</div>
-            </div>
+      <!-- Device Connection Section -->
+      <div class="info-section">
+        <h3>🔌 Devices</h3>
+        <button id="connectTrainBtn" class="device-btn">Connect Train</button>
+        <div class="device-status">
+          <span class="status-dot disconnected" id="trainDot"></span>
+          <span class="status-text disconnected" id="trainStatusText">Disconnected</span>
         </div>
+        <div id="trainDeviceInfo" style="font-size: 0.75rem; color: #999; margin-top: 0.3rem;"></div>
 
-        <div class="layout-area">
-            <div class="track-container">
-              <img src="assets/image/train.png" alt="Train Icon" id="trainIcon">
-              
-                <svg width="1200" height="600" xmlns="http://www.w3.org/2000/svg">
-                  <line x1="50" y1="150" x2="1150" y2="150" class="track-thick" />
-
-                  <line x1="100" y1="450" x2="1000" y2="450" class="track-thick" />
-
-                  <line x1="200" y1="150" x2="350" y2="300" class="track" />
-
-                  <line x1="350" y1="300" x2="850" y2="300" class="track" />
-
-                  <line x1="850" y1="300" x2="1000" y2="150" class="track" />
-
-                  <!-- Top left diagonal moved slightly to the right -->
-                  <line x1="270" y1="150" x2="390" y2="80" class="diagonal" />
-
-                  <line x1="850" y1="300" x2="650" y2="450" class="diagonal" /> 
-                </svg>
-
-                <button class="station_1" id="station1">Station 1</button>
-                <button class="station_2" id="station2">Station 2</button>
-                <button class="station_3" id="station3">Station 3</button>
-                <button class="station_4" id="station4">Station 4</button>
-                <button class="station_5" id="station5">Station 5</button>
-
-
-                
-
-
-                <div id="switch_light">
-                  <div class="black_board"></div>
-                  <div class="red_light"></div>
-                  <div class="green_light"></div>
-                  <div class="pole"></div>
-                  <div class="line_1"> </div>
-                  <div class="line_2"> </div>
-                </div>
-
-                <div id="switch_light_2">
-                  <div class="black_board"></div>
-                  <div class="red_light"></div>
-                  <div class="green_light"></div>
-                  <div class="pole"></div>
-                  <div class="line_2"> </div>
-                  <div class="line_3"> </div>
-                </div>
-
-                <div id="switch_light_3">
-                  <div class="black_board"></div>
-                  <div class="red_light"></div>
-                  <div class="green_light"></div>
-                  <div class="pole"></div>
-                  <div class="line_1"> </div>
-                  <div class="line_2"> </div>
-                </div>
-                
-                <div id="switch_light_4">
-                  <div class="black_board"></div>
-                  <div class="red_light"></div>
-                  <div class="green_light"></div>
-                  <div class="pole"></div>
-                  <div class="line_1"> </div>
-                  <div class="line_2"> </div>
-                </div>
-
-                <div id="switch_light_5">
-                  <div class="black_board"></div>
-                  <div class="red_light"></div>
-                  <div class="green_light"></div>
-                  <div class="pole"></div>
-                  <div class="line_1"> </div>
-                  <div class="line_2"> </div>
-                </div>
-
-                
-
-            </div>
+        <button id="connectSwitchBtn" class="device-btn" style="margin-top: 0.8rem;">Connect Switches</button>
+        <div class="device-status">
+          <span class="status-dot disconnected" id="switchDot"></span>
+          <span class="status-text disconnected" id="switchStatusText">Disconnected</span>
         </div>
+        <div id="switchDeviceInfo" style="font-size: 0.75rem; color: #999; margin-top: 0.3rem;"></div>
+      </div>
+
+      <!-- Switch State Indicators -->
+      <div class="info-section">
+        <h3>🔀 Switch States</h3>
+        <div class="switch-indicators">
+          <div class="switch-indicator off" id="switchInd1">
+            S1 <span class="switch-state"></span>
+          </div>
+          <div class="switch-indicator off" id="switchInd2">
+            S2 <span class="switch-state"></span>
+          </div>
+          <div class="switch-indicator off" id="switchInd3">
+            S3 <span class="switch-state"></span>
+          </div>
+          <div class="switch-indicator off" id="switchInd4">
+            S4 <span class="switch-state"></span>
+          </div>
+          <div class="switch-indicator off" id="switchInd5">
+            S5 <span class="switch-state"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timer Configuration Section -->
+      <div class="info-section">
+        <h3>⏱️ Timers (ms)</h3>
+        <div class="timer-section">
+          <div class="timer-row"><label>1→2:</label> <input type="number" class="timer-input" data-from="1" data-to="2"
+              value="2000" min="500" step="100"></div>
+          <div class="timer-row"><label>2→1:</label> <input type="number" class="timer-input" data-from="2" data-to="1"
+              value="2000" min="500" step="100"></div>
+          <div class="timer-row"><label>2→3:</label> <input type="number" class="timer-input" data-from="2" data-to="3"
+              value="6550" min="500" step="100"></div>
+          <div class="timer-row"><label>2→6:</label> <input type="number" class="timer-input" data-from="2" data-to="6"
+              value="4200" min="500" step="100"></div>
+          <div class="timer-row"><label>3→2:</label> <input type="number" class="timer-input" data-from="3" data-to="2"
+              value="6550" min="500" step="100"></div>
+          <div class="timer-row"><label>3→4:</label> <input type="number" class="timer-input" data-from="3" data-to="4"
+              value="6500" min="500" step="100"></div>
+          <div class="timer-row"><label>3→6:</label> <input type="number" class="timer-input" data-from="3" data-to="6"
+              value="4100" min="500" step="100"></div>
+          <div class="timer-row"><label>4→3:</label> <input type="number" class="timer-input" data-from="4" data-to="3"
+              value="6500" min="500" step="100"></div>
+          <div class="timer-row"><label>4→5:</label> <input type="number" class="timer-input" data-from="4" data-to="5"
+              value="4200" min="500" step="100"></div>
+          <div class="timer-row"><label>5→4:</label> <input type="number" class="timer-input" data-from="5" data-to="4"
+              value="4200" min="500" step="100"></div>
+          <div class="timer-row"><label>6→2:</label> <input type="number" class="timer-input" data-from="6" data-to="2"
+              value="4200" min="500" step="100"></div>
+          <div class="timer-row"><label>6→3:</label> <input type="number" class="timer-input" data-from="6" data-to="3"
+              value="4100" min="500" step="100"></div>
+        </div>
+      </div>
+
+      <button class="switch">Test Lights</button>
+
+      <div class="station-display">
+        <div class="station-label">Current Station</div>
+        <div class="station-number" id="stationNumber">2</div>
+        <div class="station-status" id="stationStatusText">Ready to depart</div>
+      </div>
     </div>
-    
+
+    <div class="layout-area">
+      <div class="track-container">
+        <img src="assets/image/train.png" alt="Train Icon" id="trainIcon">
+
+        <svg width="1200" height="600" xmlns="http://www.w3.org/2000/svg">
+          <line x1="50" y1="150" x2="1150" y2="150" class="track-thick" />
+
+          <line x1="100" y1="450" x2="1000" y2="450" class="track-thick" />
+
+          <line x1="200" y1="150" x2="350" y2="300" class="track" />
+
+          <line x1="350" y1="300" x2="850" y2="300" class="track" />
+
+          <line x1="850" y1="300" x2="1000" y2="150" class="track" />
+
+          <!-- Top left diagonal moved slightly to the right -->
+          <line x1="270" y1="150" x2="390" y2="80" class="diagonal" />
+
+          <line x1="850" y1="300" x2="650" y2="450" class="diagonal" />
+        </svg>
+
+        <button class="station_1" id="station1">Station 1</button>
+        <button class="station_2" id="station2">Station 2</button>
+        <button class="station_3" id="station3">Station 3</button>
+        <button class="station_4" id="station4">Station 4</button>
+        <button class="station_5" id="station5">Station 5</button>
+        <button class="station_6" id="station6">Station 6</button>
+
+
+
+
+
+        <div id="switch_light">
+          <div class="black_board"></div>
+          <div class="red_light"></div>
+          <div class="green_light"></div>
+          <div class="pole"></div>
+          <div class="line_1"> </div>
+          <div class="line_2"> </div>
+        </div>
+
+        <div id="switch_light_2">
+          <div class="black_board"></div>
+          <div class="red_light"></div>
+          <div class="green_light"></div>
+          <div class="pole"></div>
+          <div class="line_2"> </div>
+          <div class="line_3"> </div>
+        </div>
+
+        <div id="switch_light_3">
+          <div class="black_board"></div>
+          <div class="red_light"></div>
+          <div class="green_light"></div>
+          <div class="pole"></div>
+          <div class="line_1"> </div>
+          <div class="line_2"> </div>
+        </div>
+
+        <div id="switch_light_4">
+          <div class="black_board"></div>
+          <div class="red_light"></div>
+          <div class="green_light"></div>
+          <div class="pole"></div>
+          <div class="line_1"> </div>
+          <div class="line_2"> </div>
+        </div>
+
+        <div id="switch_light_5">
+          <div class="black_board"></div>
+          <div class="red_light"></div>
+          <div class="green_light"></div>
+          <div class="pole"></div>
+          <div class="line_1"> </div>
+          <div class="line_2"> </div>
+        </div>
+
+
+
+      </div>
+    </div>
+  </div>
+
 
   <script src="train.js"></script>
 
-  
+
 
 
 
 </body>
+
 </html>

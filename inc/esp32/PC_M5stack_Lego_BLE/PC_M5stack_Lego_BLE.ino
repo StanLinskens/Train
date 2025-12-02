@@ -7,9 +7,27 @@
 //    → aanpassen aan jouw hub (via BLE-scanner/app gevonden)
 const char* TRAIN_HUB_MAC = "9C:9A:C0:1B:C0:EA";   // TODO: aanpassen
 
-
+int currentSpeed = 0;
+int batteryPercent = 0;
 
 int counter = 0;
+
+void drawStatusBar() {
+    // Read M5 battery (M5Unified)
+    batteryPercent = M5.Power.getBatteryLevel();  
+
+    // Draw background strip
+    M5.Display.fillRect(0, 210, 320, 30, BLACK);
+
+    M5.Display.setTextSize(2);
+    M5.Display.setTextColor(WHITE);
+
+    M5.Display.setCursor(10, 215);
+    M5.Display.printf("Batt: %d%%", batteryPercent);
+
+    M5.Display.setCursor(150, 215);
+    M5.Display.printf("Speed: %d", currentSpeed);
+}
 
 // Draws the base UI
 void drawUI() {
@@ -53,6 +71,7 @@ void handleCommand(const String& cmd) {
     int value = cmd.substring(1).toInt();
     LegoHub_SetMotorPower((int8_t)value);
     BleUart_Send("ACK:MOTOR:" + String(value));
+    drawStatusBar();
   }
   else if (cmd.equalsIgnoreCase("STOP")) {
     LegoHub_SetMotorPower(0);
@@ -70,6 +89,9 @@ void MoveTrain(int motorPower) {
   LegoHub_SetMotorPower(motorPower);
   delay(1000);
   LegoHub_SetMotorPower(0);
+
+  currentSpeed = 0;
+  drawStatusBar();
   
   String response = "ACK:MOVED:" + String(motorPower);
   Serial.print("[APP] Sending BLE response: ");
@@ -94,6 +116,7 @@ void setup() {
   M5.begin(cfg);
 
   drawUI();
+  drawStatusBar();
 }
 
 void loop() {
@@ -128,7 +151,7 @@ void loop() {
         BleUart_Init("M5 LEGO Bridge");
         LegoHub_Init(TRAIN_HUB_MAC);
     }
-
+  
   delay(10);
 }
 
