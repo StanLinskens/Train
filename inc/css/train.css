@@ -1,10 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
 :root {
-    --primary-color: #C91A09;
-    --accent-color: #FFD500;
-    --dark-bg: #0055BF;
-    --light-bg: #f0f4f8;
+    /* Primary / Base: teal / turquoise */
+    --primary-color: #00A79D;
+    /* Slightly darker primary used for gradients and accents */
+    --primary-dark: #00706B;
+    /* Accent (default: warm yellow). Change to purple (#6B1FC8) if you prefer purple accents */
+    --accent-color: #EFA242; /* logo color (old logo) */
+    --accent-dark: #CC872D; /* darker accent for borders/shadows */
+    /* Page background (soft light grey) */
+    --light-bg: #F7F7F7;
+    /* Darker background shades used in layout gradients */
+    --dark-bg: #00796B;
+    --dark-bg-2: #005F56;
     --success: #22c55e;
     --danger: #ef4444;
     --warning: #f59e0b;
@@ -12,7 +20,7 @@
 
 /* Allow CSS custom properties in inline styles */
 * {
-    --accent-color: #FFD500;
+    --accent-color: #EFA242;
 }
 
 * {
@@ -23,13 +31,14 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background: var(--dark-bg);
+    /* use the soft light background requested */
+    background: var(--light-bg);
     color: #333;
 }
 
 /* ============ HEADER ============ */
 header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #a01508 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     color: #fff;
     padding: 1.2rem 0;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -157,17 +166,17 @@ button {
 }
 
 .device-btn {
-    background: linear-gradient(135deg, var(--primary-color), #a01508);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: #fff;
     padding: 0.75rem 1.2rem;
     width: 100%;
     margin-bottom: 0.5rem;
-    box-shadow: 0 4px 12px rgba(201, 26, 9, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 167, 157, 0.3);
 }
 
 .device-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(201, 26, 9, 0.4);
+    box-shadow: 0 6px 16px rgba(0, 167, 157, 0.4);
 }
 
 .device-btn:disabled {
@@ -287,13 +296,13 @@ button {
 
 /* ============ CURRENT STATION DISPLAY ============ */
 .station-display {
-    background: linear-gradient(135deg, var(--primary-color), #a01508);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: #fff;
     padding: 1.5rem;
     border-radius: 12px;
     text-align: center;
     margin-top: 1rem;
-    box-shadow: 0 6px 20px rgba(201, 26, 9, 0.3);
+    box-shadow: 0 6px 20px rgba(0, 167, 157, 0.3);
     border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -354,7 +363,7 @@ button {
 .timer-row input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 8px rgba(201, 26, 9, 0.2);
+    box-shadow: 0 0 8px rgba(0, 167, 157, 0.2);
 }
 
 /* ============ TRACK CONTAINER ============ */
@@ -364,7 +373,7 @@ button {
     align-items: center;
     justify-content: center;
     padding: 2rem;
-    background: linear-gradient(135deg, var(--dark-bg) 0%, #003a8a 100%);
+    background: linear-gradient(135deg, var(--dark-bg) 0%, var(--dark-bg-2) 100%);
     position: relative;
     overflow: hidden;
 }
@@ -422,7 +431,7 @@ svg {
 }
 
 .station_1, .station_2, .station_3, .station_4, .station_5 {
-    background: linear-gradient(135deg, var(--primary-color), #a01508);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
 }
 
 /* Current station highlighting - gold with bright glow */
@@ -433,10 +442,11 @@ svg {
 .station_5.current-station,
 .station_6.current-station
  {
-    background: linear-gradient(135deg, #FFD500, #e6b800) !important;
+    /* use accent color for current station highlight */
+    background: linear-gradient(135deg, var(--accent-color), #e6b800) !important;
     color: #1f1f1f !important;
-    border-color: #ffb700 !important;
-    box-shadow: 0 0 25px rgba(255, 213, 0, 0.9), 0 0 40px rgba(255, 213, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    border-color: var(--accent-dark) !important;
+    box-shadow: 0 0 25px rgba(239, 162, 66, 0.9), 0 0 40px rgba(239, 162, 66, 0.6), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
     border-width: 3px !important;
 }
 
@@ -478,7 +488,7 @@ svg {
 .station_6 {
     top: 275px;
     left: 520px;
-    background: linear-gradient(135deg, var(--primary-color), #a01508);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
 }
 
 .station_3 {
@@ -631,7 +641,7 @@ svg {
 }
 
 .info-bar::-webkit-scrollbar-track {
-    background: #f0f4f8;
+    background: var(--light-bg);
 }
 
 .info-bar::-webkit-scrollbar-thumb {

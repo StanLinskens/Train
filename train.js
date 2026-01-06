@@ -42,16 +42,17 @@ const stationConnectivity = {
 // Current train state
 let currentStation = 2;      // Train starts at station 2
 let isMoving = false;        // Track if train is currently moving
-let activeTimeout = null;    // Track active movement timeout
+// Color matching state
+let colorMatchResolver = null; // function to resolve color-match promise for the current leg
+let colorMatchStation = null;  // station id we are currently trying to match with color
 
-// Helper to get timer for a specific route
-function getTimer(fromStation, toStation) {
-  const input = document.querySelector(`.timer-input[data-from="${fromStation}"][data-to="${toStation}"]`);
-  if (input) {
-    return parseInt(input.value, 10);
-  }
-  return 2000; // Default fallback
-}
+// Automatic mode state
+let isAutoRunning = false;            // whether automatic station-to-station mode is active
+let autoStations = [1,2,3,4,5,6];    // ordered station list for automatic traversal
+let autoIndex = 0;                   // index into autoStations for the next target
+let autoDelayMs = 10000;              // delay after arriving before departing (ms) - 10 seconds per request
+
+// Note: timers removed - stopping is now based on color sensor matching only.
 
 // Update visual switch indicator
 function updateSwitchIndicator(switchNumber, isOn) {
@@ -94,6 +95,136 @@ function getTrainDirection(fromStation, toStation) {
     // Vertical movement dominates
     return dy > 0 ? 'M50' : 'M-50';  // M40 = down, M-40 = up
   }
+}
+
+// --- Color utilities for sensor-based stopping ---
+function hexToRgb(hex) {
+  if (!hex || hex[0] !== '#') return null;
+  const bigint = parseInt(hex.slice(1), 16);
+  return {
+    r: (bigint >> 16) & 255,
+    g: (bigint >> 8) & 255,
+    b: bigint & 255
+  };
+}
+
+function getStationColor(stationId) {
+  try {
+    const el = document.getElementById(`stationColor${stationId}`);
+    if (!el) return null;
+    return hexToRgb(el.value);
+  } catch (e) {
+    return null;
+  }
+}
+
+function getColorMargin() {
+  const el = document.getElementById('colorMargin');
+  if (!el) return 30;
+  const v = parseInt(el.value, 10);
+  return isNaN(v) ? 30 : v;
+}
+
+function parseRGBFromText(text) {
+  // Matches patterns like: "R:71 G:90 B:87" (flexible spacing)
+  const re = /R\s*[:]?\s*(\d{1,3})\D+G\s*[:]?\s*(\d{1,3})\D+B\s*[:]?\s*(\d{1,3})/i;
+  const m = text.match(re);
+  if (m) {
+    return { r: parseInt(m[1], 10), g: parseInt(m[2], 10), b: parseInt(m[3], 10) };
+  }
+  return null;
+}
+
+function handleIncomingRGB(rgb) {
+  console.log('Sensor RGB:', rgb);
+  // If there's an active color-match target, check it
+  if (colorMatchStation && colorMatchResolver) {
+    const target = getStationColor(colorMatchStation);
+    if (target) {
+      const margin = getColorMargin();
+      const dr = Math.abs(rgb.r - target.r);
+      const dg = Math.abs(rgb.g - target.g);
+      const db = Math.abs(rgb.b - target.b);
+      if (dr <= margin && dg <= margin && db <= margin) {
+        console.log(`Color match for station ${colorMatchStation} (dr=${dr},dg=${dg},db=${db})`);
+        // Resolve the waiting promise for the current leg and send STOP
+        const resolver = colorMatchResolver;
+        colorMatchResolver = null;
+        colorMatchStation = null;
+        try { resolver('color'); } catch (e) { /* ignore */ }
+        // Send STOP (best-effort) - the executeStation code will also ensure STOP is sent
+        sendCommand('train', 'STOP');
+      }
+    }
+  }
+}
+
+// Auto mode helpers
+async function startAutoMode() {
+  if (isAutoRunning) return;
+  isAutoRunning = true;
+  // sync autoIndex with currentStation so we depart to the next one
+  const idx = autoStations.indexOf(currentStation);
+  autoIndex = idx >= 0 ? idx : 0;
+  updateAutoStatusUI();
+
+  // Loop until stopped
+  while (isAutoRunning) {
+    try {
+      // Wait until the train is not moving
+      while (isMoving && isAutoRunning) {
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      if (!isAutoRunning) break;
+
+      // Determine next station in circular order
+      autoIndex = (autoIndex + 1) % autoStations.length;
+      const target = autoStations[autoIndex];
+
+      // If there is no path, skip to the next
+      const path = findPath(currentStation, target);
+      if (!path) {
+        console.log(`Auto: no path from ${currentStation} to ${target}, skipping`);
+        continue;
+      }
+
+      console.log(`Auto: departing to station ${target}`);
+      await executeStation(target);
+
+      // After arrival, wait configured delay before departing again
+      let waited = 0;
+      while (waited < autoDelayMs && isAutoRunning) {
+        const step = Math.min(200, autoDelayMs - waited);
+        await new Promise(r => setTimeout(r, step));
+        waited += step;
+      }
+    } catch (e) {
+      console.error('Auto mode loop error:', e);
+      // small backoff
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  isAutoRunning = false;
+  updateAutoStatusUI();
+}
+
+function stopAutoMode() {
+  if (!isAutoRunning) return;
+  isAutoRunning = false;
+  updateAutoStatusUI();
+}
+
+function toggleAutoMode() {
+  if (isAutoRunning) stopAutoMode(); else startAutoMode();
+}
+
+function updateAutoStatusUI() {
+  const btn = document.getElementById('autoToggleBtn');
+  const txt = document.getElementById('autoStatusText');
+  if (btn) btn.textContent = isAutoRunning ? 'Stop Auto' : 'Start Auto';
+  if (txt) txt.textContent = `Auto mode: ${isAutoRunning ? 'running' : 'stopped'}`;
 }
 
 // Animate train movement between stations
@@ -202,12 +333,20 @@ async function connectDevice(deviceType) {
     const nusRxChar = await nusService.getCharacteristic(NUS_RX_CHAR_UUID);
     const nusTxChar = await nusService.getCharacteristic(NUS_TX_CHAR_UUID);
 
-    // Start notifications
+    // Start notifications and handle incoming text (including RGB sensor lines)
     await nusTxChar.startNotifications();
     nusTxChar.addEventListener('characteristicvaluechanged', (event) => {
       const value = event.target.value;
       const text = new TextDecoder().decode(value);
       console.log(`From ${deviceType}:`, text);
+      // Split into lines and parse RGB lines
+      const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      for (const line of lines) {
+        const rgb = parseRGBFromText(line);
+        if (rgb) {
+          handleIncomingRGB(rgb);
+        }
+      }
     });
 
     // Handle disconnection
@@ -364,11 +503,6 @@ async function executeStation(targetStation) {
   isMoving = true;
   updateStationButtons();
 
-  // Clear any existing timeout
-  if (activeTimeout) {
-    clearTimeout(activeTimeout);
-    activeTimeout = null;
-  }
 
   // Execute each leg in the path (skip the first element since it's currentStation)
   for (let idx = 1; idx < path.length; idx++) {
@@ -376,9 +510,8 @@ async function executeStation(targetStation) {
     const to = path[idx];
     console.log(`Moving from ${from} to ${to}...`);
 
-    const config = stationConnectivity[to] || {};
-    const switches = config.switches || [];
-    const timer = getTimer(from, to);
+  const config = stationConnectivity[to] || {};
+  const switches = config.switches || [];
     
     // Dynamically determine direction based on next station coordinates
     const direction = getTrainDirection(from, to);
@@ -395,20 +528,35 @@ async function executeStation(targetStation) {
     // Send train movement command for this leg with dynamic direction
     await sendCommand('train', direction);
 
-    console.log(`Leg moving for ${timer}ms to reach station ${to}`);
+    console.log(`Leg moving (waiting for color match) to reach station ${to}`);
 
-    // Wait for timer, then STOP and mark arrival
-    await new Promise(resolve => {
-      activeTimeout = setTimeout(async () => {
-        await sendCommand('train', 'STOP');
-        currentStation = to;
-        updateStationDisplay();
-        highlightCurrentStation();
-        updateStationButtons();
-        activeTimeout = null;
-        resolve();
-      }, timer);
-    });
+    // Wait for a color-match stop only. If the station has no configured color, stop immediately.
+    const targetColor = getStationColor(to);
+    if (!targetColor) {
+      console.log(`No target color configured for station ${to}; stopping immediately.`);
+      await sendCommand('train', 'STOP');
+      currentStation = to;
+      colorMatchResolver = null;
+      colorMatchStation = null;
+    } else {
+      colorMatchStation = to;
+      const colorPromise = new Promise((resolveColor) => {
+        colorMatchResolver = (v) => { try { resolveColor(v); } catch (e) {} };
+      });
+
+      await colorPromise;
+
+      // colorMatch handler already sent STOP, but ensure arrival state here
+      console.log(`Arrived at station ${to} by color match`);
+      currentStation = to;
+      await sendCommand('train', 'STOP');
+      colorMatchResolver = null;
+      colorMatchStation = null;
+    }
+
+    updateStationDisplay();
+    highlightCurrentStation();
+    updateStationButtons();
   }
 
   // Completed full path
@@ -539,4 +687,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Update device status on load
   updateDeviceStatus();
+
+  // Wire Auto UI controls
+  updateAutoStatusUI();
+  const autoBtn = document.getElementById('autoToggleBtn');
+  if (autoBtn) {
+    autoBtn.addEventListener('click', () => {
+      // Fixed 10s delay is used; simply toggle auto mode on click
+      toggleAutoMode();
+    });
+  }
+
 });
